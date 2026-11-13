@@ -8,7 +8,7 @@ export type Avatar =
   | { kind: "substack" }
   | { kind: "initials"; bg: string; fg: string; text: string };
 
-export type FolderId = "inbox" | "sent" | "drafts" | "archive" | "starred";
+export type FolderId = "inbox" | "sent" | "drafts" | "archive" | "starred" | "trash";
 
 export interface Email {
   id: number;
@@ -23,6 +23,18 @@ export interface Email {
   date: Date;
   unread: boolean;
   starred: boolean;
+  /* Real mail only */
+  uid?: number;
+  html?: string | null;
+  to?: string;
+  cc?: string;
+  messageId?: string | null;
+  references?: string | null;
+  attachments?: string[];
+  bodyLoaded?: boolean;
+  isDraft?: boolean;
+  /** Who the avatar is for: the sender, or the recipient for sent mail. */
+  peer?: string;
 }
 
 export const INBOX_TOTAL = 14171;

@@ -16,14 +16,30 @@ use tokio::process::Command;
 use tokio::sync::oneshot;
 
 #[derive(Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct UsageWindow {
+    /// 0..1 of the window left
+    left: f64,
+    resets_at: Option<String>,
+}
+
+#[derive(Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct Usage {
+    five_hour: Option<UsageWindow>,
+    seven_day: Option<UsageWindow>,
+    /// When Claude Code last fetched these numbers (ms since epoch)
+    as_of: Option<f64>,
+}
+
+#[derive(Serialize, Clone, Debug)]
 pub struct AgentInfo {
     provider: &'static str,
     installed: bool,
     path: Option<String>,
     version: Option<String>,
-    model: Option<String>,
     plan: Option<String>,
-    remaining: Option<f64>,
+    usage: Option<Usage>,
 }
 
 #[derive(Serialize, Clone)]
@@ -120,21 +136,6 @@ fn read_json(p: PathBuf) -> Option<Value> {
 // Claude Code
 // ---------------------------------------------------------------------------
 
-/// "opus" -> "Opus", "claude-opus-4-8" -> "Opus 4.8", "claude-sonnet-4-5-20250929" -> "Sonnet 4.5"
-fn claude_model_name(raw: &str) -> String {
-    let raw = raw.trim().trim_end_matches("[1m]");
-    let s = raw.strip_prefix("claude-").unwrap_or(raw);
-    let mut parts = s.split('-').filter(|p| !(p.len() >= 8 && p.chars().all(|c| c.is_ascii_digit())));
-    let family = parts.next().unwrap_or(s);
-    let mut name = capitalise(family);
-    let nums: Vec<&str> = parts.filter(|p| p.chars().all(|c| c.is_ascii_digit())).collect();
-    if !nums.is_empty() {
-        name.push(' ');
-        name.push_str(&nums.join("."));
-    }
-    name
-}
-
 fn capitalise(s: &str) -> String {
     let mut c = s.chars();
     match c.next() {
@@ -143,14 +144,8 @@ fn capitalise(s: &str) -> String {
     }
 }
 
-fn claude_details() -> (Option<String>, Option<String>, Option<f64>) {
-    let h = home();
-    let model = std::env::var("ANTHROPIC_MODEL")
-        .ok()
-        .or_else(|| read_json(h.join(".claude/settings.json")).and_then(|v| v["model"].as_str().map(String::from)))
-        .map(|m| claude_model_name(&m));
-
-    let state = read_json(h.join(".claude.json"));
+fn claude_details() -> (Option<String>, Option<Usage>) {
+    let state = read_json(home().join(".claude.json"));
     let plan = state.as_ref().and_then(|v| {
         let acct = &v["oauthAccount"];
         let tier = acct["userRateLimitTier"].as_str().or(acct["organizationRateLimitTier"].as_str()).unwrap_or("");
@@ -173,34 +168,30 @@ fn claude_details() -> (Option<String>, Option<String>, Option<f64>) {
         })
     });
 
-    // Claude Code caches the account's usage; the meter shows what's left of the 5-hour window.
-    let remaining = state.as_ref().and_then(|v| {
-        let w = &v["cachedUsageUtilization"]["utilization"]["five_hour"];
-        let used = w["utilization"].as_f64()?;
-        Some((1.0 - used / 100.0).clamp(0.0, 1.0))
+    // Claude Code caches the account's rate-limit usage. We show it as-is, with its timestamp.
+    let usage = state.as_ref().and_then(|v| {
+        let c = &v["cachedUsageUtilization"];
+        let window = |w: &Value| -> Option<UsageWindow> {
+            let used = w["utilization"].as_f64()?;
+            Some(UsageWindow { left: (1.0 - used / 100.0).clamp(0.0, 1.0), resets_at: w["resets_at"].as_str().map(String::from) })
+        };
+        let u = &c["utilization"];
+        let five_hour = window(&u["five_hour"]);
+        let seven_day = window(&u["seven_day"]);
+        if five_hour.is_none() && seven_day.is_none() {
+            return None;
+        }
+        Some(Usage { five_hour, seven_day, as_of: c["fetchedAtMs"].as_f64() })
     });
-    (model, plan, remaining)
+    (plan, usage)
 }
 
 // ---------------------------------------------------------------------------
 // Codex
 // ---------------------------------------------------------------------------
 
-fn codex_details() -> (Option<String>, Option<String>) {
-    let h = home();
-    let model = std::fs::read_to_string(h.join(".codex/config.toml")).ok().and_then(|t| {
-        t.lines().find_map(|l| {
-            let l = l.trim();
-            let rest = l.strip_prefix("model")?.trim_start();
-            let v = rest.strip_prefix('=')?.trim().trim_matches('"');
-            Some(v.to_string())
-        })
-    });
-    let model = model.map(|m| {
-        let m = m.replace("gpt-", "GPT ");
-        m.split('-').map(capitalise).collect::<Vec<_>>().join(" ")
-    });
-    let plan = read_json(h.join(".codex/auth.json")).and_then(|v| {
+fn codex_plan() -> Option<String> {
+    read_json(home().join(".codex/auth.json")).and_then(|v| {
         let tok = v["tokens"]["id_token"].as_str()?;
         let payload = tok.split('.').nth(1)?;
         use base64::Engine;
@@ -208,8 +199,7 @@ fn codex_details() -> (Option<String>, Option<String>) {
         let claims: Value = serde_json::from_slice(&bytes).ok()?;
         let plan = claims["https://api.openai.com/auth"]["chatgpt_plan_type"].as_str()?;
         Some(capitalise(plan))
-    });
-    (model, plan)
+    })
 }
 
 #[tauri::command]
@@ -230,26 +220,24 @@ pub async fn detect_agents() -> Vec<AgentInfo> {
             }
         }
     );
-    let (cm, cp, cr) = claude_details();
-    let (xm, xp) = codex_details();
+    let (cp, cu) = claude_details();
+    let xp = codex_plan();
     vec![
         AgentInfo {
             provider: "claude",
             installed: claude_path.is_some(),
             path: claude_path.map(|p| p.to_string_lossy().into_owned()),
             version: cv,
-            model: cm,
             plan: cp,
-            remaining: cr,
+            usage: cu,
         },
         AgentInfo {
             provider: "codex",
             installed: codex_path.is_some(),
             path: codex_path.map(|p| p.to_string_lossy().into_owned()),
             version: xv,
-            model: xm,
             plan: xp,
-            remaining: None,
+            usage: None,
         },
     ]
 }
@@ -273,7 +261,8 @@ fn scratch_dir() -> PathBuf {
 }
 
 #[tauri::command]
-pub async fn run_agent(provider: String, prompt: String, on_event: Channel<AgentEvent>) -> Result<u64, String> {
+pub async fn run_agent(provider: String, model: Option<String>, prompt: String, on_event: Channel<AgentEvent>) -> Result<u64, String> {
+    let model = model.filter(|m| !m.trim().is_empty());
     let bin = which(&provider).ok_or_else(|| format!("{provider} isn't installed"))?;
     let mut cmd = Command::new(&bin);
     match provider.as_str() {
@@ -289,9 +278,16 @@ pub async fn run_agent(provider: String, prompt: String, on_event: Channel<Agent
                 "--strict-mcp-config",
                 "--no-session-persistence",
             ]);
+            // Mail work is light: default to the smallest model.
+            cmd.args(["--model", model.as_deref().unwrap_or("haiku")]);
         }
         "codex" => {
-            cmd.args(["exec", "--json", "--skip-git-repo-check", "--sandbox", "read-only", "-"]);
+            cmd.args(["exec", "--json", "--skip-git-repo-check", "--sandbox", "read-only"]);
+            cmd.args(["-c", "model_reasoning_effort=\"low\""]);
+            if let Some(m) = &model {
+                cmd.args(["-m", m]);
+            }
+            cmd.arg("-");
         }
         other => return Err(format!("Unknown provider {other}")),
     }
@@ -322,6 +318,8 @@ pub async fn run_agent(provider: String, prompt: String, on_event: Channel<Agent
             tokio::select! {
                 _ = &mut cancel_rx => {
                     let _ = child.kill().await;
+                    // Cancelled on purpose: say nothing.
+                    finished = true;
                     break;
                 }
                 line = lines.next_line() => {
@@ -423,18 +421,5 @@ fn handle_codex(v: &Value, full: &mut String, finished: &mut bool, ch: &Channel<
 pub fn cancel_agent(run_id: u64) {
     if let Some(tx) = runs().lock().unwrap().remove(&run_id) {
         let _ = tx.send(());
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::claude_model_name;
-
-    #[test]
-    fn model_names() {
-        assert_eq!(claude_model_name("opus"), "Opus");
-        assert_eq!(claude_model_name("claude-opus-4-8"), "Opus 4.8");
-        assert_eq!(claude_model_name("claude-sonnet-4-5-20250929"), "Sonnet 4.5");
-        assert_eq!(claude_model_name("claude-opus-4-6[1m]"), "Opus 4.6");
     }
 }

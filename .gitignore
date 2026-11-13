@@ -7,3 +7,4 @@ src-tauri/gen
 dist-release
 *.tsbuildinfo
 .vercel
+RELEASE_NOTES.md

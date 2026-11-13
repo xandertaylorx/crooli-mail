@@ -6,15 +6,16 @@ import { ListColumn } from "./components/MailList";
 import { ReaderPane } from "./components/Reader";
 import { detectAgents } from "./lib/agent";
 import { applyDemoScene } from "./lib/demo";
-import { useStore } from "./store";
+import { startAutoUpdates } from "./lib/updates";
+import { applyTheme, useStore } from "./store";
 
 export default function App() {
   const setAgents = useStore((s) => s.setAgents);
   const toast = useStore((s) => s.toast);
-  const query = useStore((s) => s.query);
-  const setQuery = useStore((s) => s.setQuery);
 
   useEffect(() => {
+    applyTheme(useStore.getState().theme);
+    useStore.getState().loadAccounts();
     detectAgents()
       .then(setAgents)
       .then(applyDemoScene)
@@ -29,36 +30,43 @@ export default function App() {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         s.setPaletteOpen(!s.paletteOpen);
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "r") {
+        e.preventDefault();
+        s.refresh();
       } else if (e.key === "Escape") {
         if (s.paletteOpen) s.setPaletteOpen(false);
         else if (s.panel) s.setPanel(null);
         else if (s.query) s.setQuery("");
-      } else if (!typing && !e.metaKey && !e.ctrlKey && (e.key === "c" || e.key === "/")) {
+      } else if (!typing && !e.metaKey && !e.ctrlKey && e.key === "c") {
         e.preventDefault();
-        if (e.key === "c") s.setPanel("compose");
-        else s.setPaletteOpen(true);
+        s.openCompose();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  useEffect(() => startAutoUpdates(), []);
+
+  // New mail: check every 90 seconds, and whenever the window comes back to the front.
+  useEffect(() => {
+    const tick = () => useStore.getState().refresh({ quiet: true });
+    const id = window.setInterval(tick, 90_000);
+    window.addEventListener("focus", tick);
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener("focus", tick);
+    };
+  }, []);
+
   return (
     <div className="flex h-full bg-window">
       <IconRail />
-      <main className="mb-[11px] mr-[11px] mt-[11px] flex min-w-0 flex-1 flex-col overflow-hidden rounded-[16px] border border-line bg-canvas">
+      <main className="mb-[8px] mr-[8px] mt-[8px] flex min-w-0 flex-1 flex-col overflow-hidden rounded-[14px] border border-line bg-canvas">
         <div className="bg-surface">
           <PageHeader />
           <Toolbar />
         </div>
-        {query && (
-          <div className="flex h-[40px] shrink-0 items-center gap-[8px] border-b border-line bg-surface px-[24px] text-[14px] text-ink-muted">
-            Showing results for “{query}”
-            <button type="button" className="rounded-full bg-pill px-[10px] py-[2px] text-ink-2" onClick={() => setQuery("")}>
-              Clear
-            </button>
-          </div>
-        )}
         <div className="flex min-h-0 flex-1">
           <ListColumn />
           <ReaderPane />
@@ -66,7 +74,7 @@ export default function App() {
       </main>
       <CommandPalette />
       {toast && (
-        <div className="pop-in fixed bottom-[28px] left-1/2 z-50 -translate-x-1/2 rounded-full bg-[#1c1c1c] px-[18px] py-[10px] text-[15px] text-white shadow-[0_8px_30px_rgba(0,0,0,0.18)]">
+        <div className="pop-in fixed bottom-[24px] left-1/2 z-50 -translate-x-1/2 rounded-full bg-[#1c1c1c] px-[16px] py-[8px] text-[13px] text-white shadow-[0_8px_30px_rgba(0,0,0,0.18)]">
           {toast}
         </div>
       )}

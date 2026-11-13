@@ -56,6 +56,8 @@
   --ink-pill: #4a4a4a;
   --date-unread: #0e0e0e;
   --divider: #e4e4e4;
+  --banner-ink: #13202c;
+  --banner-fade: rgba(240, 248, 255, 0.72);
   color-scheme: light;
 }
 
@@ -93,6 +95,8 @@
     --ink-pill: #a1a1a1;
     --date-unread: #ededed;
     --divider: #1f1f1f;
+    --banner-ink: #f3f6fb;
+    --banner-fade: rgba(8, 15, 32, 0.72);
     color-scheme: dark;
   }
 }
@@ -131,6 +135,8 @@
   --ink-pill: #a1a1a1;
   --date-unread: #ededed;
   --divider: #1f1f1f;
+  --banner-ink: #f3f6fb;
+  --banner-fade: rgba(8, 15, 32, 0.72);
   color-scheme: dark;
 }
 
@@ -182,10 +188,20 @@ button {
   cursor: default;
 }
 
+/* Focus: text fields show focus with their own border, so no outline. Buttons reached
+   with the keyboard get a quiet grey ring, never a thick blue box. */
+:focus,
 :focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-  border-radius: 8px;
+  outline: none;
+}
+button:focus-visible,
+a:focus-visible,
+[role="option"]:focus-visible,
+[role="tab"]:focus-visible,
+[role="radio"]:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 3.5px var(--ink-faint);
 }
 
 .tabular {
@@ -218,7 +234,7 @@ button {
 /* The list column keeps the reference's exact card width, so its scrollbar is hidden
    (trackpad, wheel and J/K still scroll it). */
 .list-column {
-  padding-right: 23px;
+  padding-right: 12px;
   scrollbar-width: none;
 }
 .list-column::-webkit-scrollbar {

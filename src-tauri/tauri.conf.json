@@ -1,7 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Crooli Mail",
-  "version": "0.1.0",
+  "mainBinaryName": "Crooli Mail",
+  "version": "0.2.0",
   "identifier": "com.crooli.mail",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -20,7 +21,10 @@
         "minHeight": 640,
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
-        "trafficLightPosition": { "x": 22, "y": 24 },
+        "trafficLightPosition": {
+          "x": 16,
+          "y": 20
+        },
         "backgroundColor": "#fcfcfc"
       }
     ],
@@ -30,10 +34,31 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["app", "dmg"],
+    "targets": [
+      "app",
+      "dmg"
+    ],
     "category": "Productivity",
-    "copyright": "© Crooli",
-    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
-    "macOS": { "minimumSystemVersion": "13.0" }
+    "copyright": "\u00a9 Crooli",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "macOS": {
+      "minimumSystemVersion": "13.0",
+      "signingIdentity": "-"
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZERDZFRTA4OTE0OTcyMUIKUldRYmNrbVJDTzdXL1NmQk5ZeEY2WUxYQVY3dHVhcHg0NWVmOUJTcjVLTDhYM2JDN2N1cDFJak4K",
+      "endpoints": [
+        "https://github.com/xandertaylorx/crooli-mail/releases/latest/download/latest.json"
+      ]
+    }
   }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "crooli-mail"
-version = "0.1.0"
+version = "0.2.0"
 description = "Crooli Mail"
 authors = ["Crooli"]
 edition = "2021"
@@ -19,6 +19,15 @@ serde_json = "1"
 tokio = { version = "1", features = ["process", "io-util", "rt", "sync", "macros"] }
 base64 = "0.22"
 dirs = "6"
+lettre = { version = "0.11.23", default-features = false, features = ["smtp-transport", "builder", "native-tls", "hostname"] }
+chrono = "0.4.45"
+imap = "2.4"
+native-tls = "0.2"
+mail-parser = "0.11.9"
+keyring = { version = "3", features = ["apple-native", "windows-native"] }
+imap-proto = "0.10"
+ureq = "2"
+sha2 = "0.11.1"
 
 [profile.release]
 codegen-units = 1
@@ -26,3 +35,7 @@ lto = true
 opt-level = 3
 panic = "abort"
 strip = true
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-process = "2"
+tauri-plugin-updater = "2"

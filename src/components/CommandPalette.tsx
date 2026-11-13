@@ -28,7 +28,9 @@ export function CommandPalette() {
       { id: "continue", label: "Continue — let AI work through your inbox", run: () => (s.setPanel("continue"), close()) },
       { id: "compose", label: "New message", hint: "C", run: () => (s.setPanel("compose"), close()) },
       { id: "inbox", label: "Go to Inbox", run: () => (s.setFolder("inbox"), close()) },
-      { id: "sent", label: "Go to Sent items", run: () => (s.setFolder("sent"), close()) },
+      { id: "sent", label: "Go to Sent", run: () => (s.setFolder("sent"), close()) },
+      { id: "drafts", label: "Go to Drafts", run: () => (s.setFolder("drafts"), close()) },
+      { id: "ai", label: "AI and settings", run: () => (s.setPanel("ai"), close()) },
       { id: "starred", label: "Go to Starred", run: () => (s.setFolder("starred"), close()) },
       { id: "archive", label: "Go to Archive", run: () => (s.setFolder("archive"), close()) },
     ];
@@ -54,7 +56,7 @@ export function CommandPalette() {
     if (needle.length < 2) return [];
     const out = [];
     for (const m of mail) {
-      if (m.folder === "archive") continue;
+      if (m.folder === "trash") continue;
       if (m.fromName.toLowerCase().includes(needle) || m.subject.toLowerCase().includes(needle) || m.preview.toLowerCase().includes(needle)) {
         out.push(m);
         if (out.length >= 6) break;

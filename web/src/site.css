@@ -150,10 +150,9 @@ ul {
   margin: -6px -2px -6px -8px;
 }
 .brand-product {
-  font: 500 23px/1.2 var(--sans);
-  letter-spacing: -0.03em;
-  color: var(--dim);
-  margin-left: -4px;
+  font: 600 23px/1.2 var(--sans);
+  letter-spacing: -0.035em;
+  color: var(--ink);
 }
 
 /* ---------- buttons ---------- */
@@ -221,25 +220,12 @@ ul {
 }
 
 /* ---------- layout ---------- */
-.frame {
-  padding: var(--gap);
-}
-.frame + .frame {
-  padding-top: 0;
-  margin-top: var(--section);
-}
 .panel {
   position: relative;
   overflow: hidden;
   border-radius: var(--radius);
   isolation: isolate;
   background: linear-gradient(120deg, #0c2a55, #2f6fc0 45%, #8cc0f0 80%, #eef6fe);
-}
-.panel.deep {
-  background: linear-gradient(120deg, #071631, #143a73 50%, #3672bf 85%, #94c2ef);
-}
-.panel.ink {
-  background: linear-gradient(120deg, #0d0d0d, #1b1b1b 50%, #24456f 85%, #6aa3e0);
 }
 .shader {
   position: absolute;
@@ -249,24 +235,51 @@ ul {
   z-index: -1;
   display: block;
 }
-
-/* ---------- hero ---------- */
-.hero {
-  display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-  gap: var(--gap);
-  min-height: 100svh;
+main > section {
+  width: min(1280px, 100% - 2 * var(--gap));
+  margin-inline: auto;
 }
-.hero-copy {
+main > section + section {
+  margin-top: var(--section);
+}
+.center-head {
+  max-width: 760px;
+  margin: 0 auto clamp(36px, 4vw, 56px);
+  text-align: center;
   display: flex;
   flex-direction: column;
-  padding: var(--pad) var(--pad) var(--pad) calc(var(--pad) - var(--gap));
+  align-items: center;
 }
-.hero-bar {
+.center-head .lede {
+  margin-top: 20px;
+}
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  transition: background-color 0.3s, box-shadow 0.3s, backdrop-filter 0.3s;
+}
+.topbar.scrolled {
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  backdrop-filter: blur(16px) saturate(1.4);
+  box-shadow: 0 1px 0 var(--line);
+}
+.topbar-inner {
+  width: min(1280px, 100% - 2 * var(--gap));
+  margin: 0 auto;
+  height: 76px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding-inline: 12px;
+}
+.topbar-end {
+  justify-self: end;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 8px;
 }
 .pillnav {
   display: flex;
@@ -277,9 +290,9 @@ ul {
   background: var(--pill);
 }
 .pillnav a {
-  padding: 8px 16px;
+  padding: 7px 15px;
   border-radius: 999px;
-  font-size: 15px;
+  font-size: 14.5px;
   color: var(--ink-2);
   transition: background-color 0.2s, color 0.2s;
 }
@@ -287,41 +300,127 @@ ul {
   background: var(--paper);
   color: var(--ink);
 }
-.hero-main {
-  margin: auto 0;
-  padding: 72px 0;
+
+/* ---------- centred hero ---------- */
+.hero-c {
+  padding: clamp(56px, 9vw, 120px) 0 clamp(40px, 5vw, 64px);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-.hero-main .lede {
-  margin-top: 28px;
+.hero-c .display {
+  font-size: clamp(48px, 7vw, 108px);
+}
+.hero-c .lede {
+  margin-top: 26px;
+  max-width: 40em;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 28px;
+  padding: 7px 14px 7px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  font-size: 13.5px;
+  color: var(--ink-2);
+  transition: border-color 0.2s;
+}
+.badge:hover {
+  border-color: var(--dim);
+}
+.badge .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2e9d55;
+  box-shadow: 0 0 0 3px rgba(46, 157, 85, 0.18);
 }
 .cta {
+  margin-top: 34px;
   display: flex;
+  justify-content: center;
+}
+.install-line {
+  display: inline-flex;
   align-items: center;
-  gap: 28px;
-  margin-top: 36px;
+  gap: 12px;
+  max-width: 100%;
+  height: 54px;
+  padding: 0 8px 0 20px;
+  border-radius: 999px;
+  background: var(--code-bg);
+  color: #e8e6e1;
+  font: 400 15px/1 var(--mono);
+  box-shadow: 0 20px 40px -24px rgba(0, 0, 0, 0.5);
+}
+.install-line code {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.install-line .prompt {
+  color: #8f8b85;
+}
+.install-line .copy {
+  margin-left: 6px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #fff;
+  color: #161616;
+}
+.install-line .copy:hover {
+  background: #e9e9e6;
+}
+.fine {
+  margin-top: 16px;
+  font-size: 13.5px;
+  color: var(--dim);
+}
+
+/* ---------- stage panels ---------- */
+.stage-panel {
+  padding: clamp(28px, 5vw, 72px) clamp(16px, 5vw, 80px);
+}
+.stage-panel.tall {
+  padding-top: clamp(40px, 6vw, 88px);
+}
+.stage-panel .window {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+.stage-note {
+  margin-top: 18px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13.5px;
+}
+.works-with {
+  margin-top: 24px;
+  display: flex;
   flex-wrap: wrap;
-}
-.routes {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 22px 32px;
-  padding-top: 28px;
-  border-top: 1px solid var(--line);
-}
-.routes dt {
-  font: 400 15px/1.3 var(--mono);
-  color: var(--ink);
-}
-.routes dd {
-  margin-top: 6px;
+  justify-content: center;
+  align-items: center;
+  gap: 8px 26px;
   color: var(--dim);
   font-size: 15px;
+  font-weight: 500;
 }
-.hero-art {
-  display: grid;
-  place-items: center;
-  min-height: 520px;
-  padding: 48px clamp(20px, 3.5vw, 52px);
+.works-with .sep {
+  width: 1px;
+  height: 16px;
+  background: var(--line);
+}
+
+/* ---------- showcases ---------- */
+.showcase .typing {
+  margin-top: 26px;
+  text-align: left;
+  width: min(560px, 100%);
 }
 
 /* ---------- terminal ---------- */
@@ -437,23 +536,6 @@ ul {
   cursor: default;
 }
 
-/* ---------- stage ---------- */
-.stage {
-  margin-inline: var(--gap);
-  padding: clamp(64px, 8vw, 128px) clamp(16px, 5vw, 96px) clamp(48px, 6vw, 96px);
-}
-.frame.stage {
-  padding-top: clamp(64px, 8vw, 128px);
-}
-.stage-head {
-  max-width: 1240px;
-  margin: 0 auto clamp(40px, 5vw, 64px);
-}
-.stage .window {
-  max-width: 1240px;
-  margin: 0 auto;
-}
-
 /* ---------- bento ---------- */
 .bento {
   display: grid;
@@ -542,6 +624,17 @@ ul {
   font-size: 18px;
   letter-spacing: -0.01em;
 }
+.agent-text em {
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--dim);
+  background: var(--pill);
+  border-radius: 6px;
+  padding: 1px 6px;
+  margin-left: 6px;
+  vertical-align: 2px;
+}
 .agent-text small {
   font-size: 13.5px;
   color: var(--dim);
@@ -557,6 +650,11 @@ ul {
   flex: 1;
   border-radius: 2px;
   background: var(--pill);
+}
+.tile-sub {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14.5px;
+  max-width: 24em;
 }
 .media {
   grid-column: span 4;
@@ -661,35 +759,66 @@ kbd {
   vertical-align: 3px;
 }
 
-/* ---------- splits ---------- */
-.split {
+/* ---------- privacy ---------- */
+.facts-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--gap);
-  min-height: min(100svh, 900px);
 }
-.split.flip {
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+.fact {
+  padding: 26px;
+  border-radius: var(--radius);
+  background: var(--paper);
+  border: 1px solid var(--line);
 }
-.split-art {
-  display: grid;
-  place-items: center;
-  min-height: 600px;
-  padding: clamp(32px, 5vw, 80px) clamp(20px, 3.5vw, 56px);
+.fact h3 {
+  font: 600 18px/1.2 var(--sans);
+  letter-spacing: -0.02em;
 }
-.split-copy {
+.fact p {
+  margin-top: 8px;
+  color: var(--ink-2);
+  font-size: 15px;
+}
+
+/* ---------- download ---------- */
+.download-inner {
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: center;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  padding: clamp(24px, 4vw, 48px) 0;
+}
+.download-inner .display {
+  font-size: clamp(40px, 5vw, 80px);
+}
+.download-inner .lede {
+  margin: 22px 0 34px;
+}
+.download-inner .term {
+  text-align: left;
+}
+.script-link {
+  margin-top: 26px;
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  padding: var(--pad) clamp(24px, 4vw, 72px);
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 15px;
 }
-.split-copy .lede {
-  margin-top: 24px;
+.script-link a {
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
 }
+
+/* ---------- typing box ---------- */
 .typing {
   margin-top: 32px;
-  min-height: 11.5em;
-  padding: 20px 22px;
+  min-height: 7.5em;
+  padding: 18px 20px;
   border-radius: 16px;
   background: var(--paper);
   border: 1px solid var(--line);
@@ -715,131 +844,15 @@ kbd {
   }
 }
 
-/* ---------- privacy ---------- */
-.facts {
-  display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-  gap: clamp(32px, 5vw, 96px);
-  padding-inline: calc(var(--pad) + var(--gap));
-}
-.facts-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 36px 40px;
-}
-.facts-grid h3 {
-  font: 600 19px/1.2 var(--sans);
-  letter-spacing: -0.02em;
-}
-.facts-grid p {
-  margin-top: 8px;
-  color: var(--ink-2);
-}
-.facts-grid > div {
-  padding-top: 20px;
-  border-top: 1px solid var(--line);
-}
-
-/* ---------- download ---------- */
-.download {
-  margin-inline: var(--gap);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: center;
-  gap: clamp(32px, 5vw, 80px);
-  padding: clamp(56px, 8vw, 128px) clamp(24px, 5vw, 88px);
-}
-.frame.download {
-  padding-top: clamp(56px, 8vw, 128px);
-}
-.download .display {
-  font-size: clamp(40px, 4.6vw, 76px);
-}
-.download .lede {
-  margin-top: 24px;
-}
-.reqs {
-  margin-top: 28px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.reqs li {
-  padding: 7px 13px;
-  border-radius: 999px;
-  font-size: 14px;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.16);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
-}
-.script-link {
-  margin-top: 28px;
-  display: flex;
-  gap: 12px;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 15px;
-}
-.script-link a {
-  color: #fff;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
-}
-
-/* ---------- dock ---------- */
-.dock {
-  position: fixed;
-  z-index: 20;
-  left: 50%;
-  bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 8px 8px 18px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--paper) 82%, transparent);
-  backdrop-filter: blur(18px) saturate(1.4);
-  box-shadow:
-    0 20px 50px -20px rgba(0, 0, 0, 0.35),
-    0 0 0 1px var(--line);
-  transform: translate(-50%, 140%);
-  opacity: 0;
-  transition: transform 0.5s var(--ease), opacity 0.3s;
-}
-.dock.on {
-  transform: translate(-50%, 0);
-  opacity: 1;
-}
-.dock .logo-word,
-.dock .brand-product {
-  font-size: 18px;
-}
-.dock .brand svg {
-  width: 30px;
-  height: 30px;
-}
-.dock nav {
-  display: flex;
-  gap: 2px;
-  margin-left: 12px;
-}
-.dock nav a {
-  padding: 8px 12px;
-  border-radius: 999px;
-  font-size: 14px;
-  color: var(--ink-2);
-}
-.dock nav a:hover {
-  background: var(--pill);
-  color: var(--ink);
-}
-
 /* ---------- footer ---------- */
 .footer {
+  width: min(1280px, 100% - 2 * var(--gap));
+  margin: var(--section) auto 0;
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 24px;
-  padding: 64px calc(var(--pad) + var(--gap)) 120px;
+  padding: 56px 12px 72px;
   border-top: 1px solid var(--line);
-  margin-top: var(--section);
 }
 .footer p {
   margin-top: 12px;
@@ -860,46 +873,34 @@ kbd {
 
 /* ---------- responsive ---------- */
 @media (max-width: 1100px) {
-  .hero,
-  .split,
-  .split.flip,
-  .download,
-  .facts {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .split.flip .split-copy {
-    order: -1;
-  }
-  .split.flip .split-art {
-    order: 0;
-  }
-  .hero {
-    min-height: auto;
-  }
-  .hero-art {
-    min-height: 460px;
-  }
-  .split-art {
-    min-height: 0;
-  }
   .bento > * {
     grid-column: span 12 !important;
   }
   .hero-tile {
-    min-height: 380px;
+    min-height: 360px;
+  }
+  .facts-grid {
+    grid-template-columns: 1fr 1fr;
   }
 }
-@media (max-width: 640px) {
-  .routes,
+@media (max-width: 760px) {
+  .pillnav {
+    display: none;
+  }
+  .topbar-inner {
+    grid-template-columns: 1fr auto;
+  }
   .facts-grid,
-  .cols {
+  .cols,
+  .toolbox .cols {
     grid-template-columns: 1fr;
   }
-  .pillnav a:not(:last-of-type) {
-    display: none;
+  .install-line {
+    font-size: 12px;
+    padding-left: 14px;
   }
-  .dock nav {
-    display: none;
+  .install-line code {
+    max-width: 52vw;
   }
   .footer {
     grid-template-columns: 1fr;

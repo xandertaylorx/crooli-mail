@@ -24,6 +24,12 @@ export function applyDemoScene() {
     case "compose":
       s.setPanel("compose");
       break;
+    case "connect":
+      s.setPanel("connect");
+      break;
+    case "settings":
+      s.setPanel("ai");
+      break;
     case "palette":
       s.setPaletteOpen(true);
       break;

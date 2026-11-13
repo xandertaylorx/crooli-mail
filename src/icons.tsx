@@ -25,87 +25,87 @@ export function CrooliMark({ size = 24, ...p }: P) {
   );
 }
 
-/* ---------- Rail icons: filled glyphs with knocked-out detail ---------- */
-export function RailCompose({ size = 24, ...p }: P) {
+/* ---------- Rail icons ----------
+   One set, drawn on a 20px grid: 1.6px round strokes, generous counters, and a
+   filled variant for the active item so the current place reads at a glance. */
+type R = P & { active?: boolean };
+const rail = (size = 20): SVGProps<SVGSVGElement> => ({
+  width: size,
+  height: size,
+  viewBox: "0 0 20 20",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.6,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+  "aria-hidden": true,
+});
+const fillIf = (on?: boolean) => (on ? "currentColor" : "none");
+const knock = "var(--surface)";
+
+export function IcoCompose({ size, active, ...p }: R) {
   return (
-    <svg {...base(size)} {...p}>
-      <rect x="2" y="4" width="18" height="15" rx="3.5" fill="currentColor" />
-      <path d="M5.5 8.5 11 12l5.5-3.5" stroke="var(--window)" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-      <path
-        d="M18.5 13.2c.35 1.55 1.05 2.25 2.6 2.6-1.55.35-2.25 1.05-2.6 2.6-.35-1.55-1.05-2.25-2.6-2.6 1.55-.35 2.25-1.05 2.6-2.6Z"
-        fill="currentColor"
-        stroke="var(--window)"
-        strokeWidth="2.2"
-        strokeLinejoin="round"
-        paintOrder="stroke"
-      />
+    <svg {...rail(size)} {...p}>
+      <path d="M9 3.5H5.5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V11" />
+      <path d="m14.6 2.9 2.5 2.5-6.6 6.6-3.2.7.7-3.2 6.6-6.6Z" fill={fillIf(active)} />
     </svg>
   );
 }
-
-export function RailStarred({ size = 24, ...p }: P) {
+export function IcoInbox({ size, active, ...p }: R) {
   return (
-    <svg {...base(size)} {...p}>
-      <rect x="7" y="2.5" width="14.5" height="14.5" rx="3.5" fill="currentColor" opacity="0.55" />
-      <rect x="2.5" y="7" width="14.5" height="14.5" rx="3.5" fill="currentColor" stroke="var(--window)" strokeWidth="1.6" />
-      <path
-        d="m9.75 10.6 1.05 2.1 2.3.33-1.67 1.62.4 2.3-2.08-1.09-2.07 1.09.4-2.3-1.68-1.62 2.31-.33 1.04-2.1Z"
-        fill="var(--window)"
-      />
+    <svg {...rail(size)} {...p}>
+      <path d="M2.8 11.5 4.6 4.8A2 2 0 0 1 6.5 3.3h7a2 2 0 0 1 1.9 1.5l1.8 6.7v3.2a2 2 0 0 1-2 2H4.8a2 2 0 0 1-2-2v-3.2Z" fill={fillIf(active)} />
+      <path d="M2.8 11.5h3.9l1 1.8h4.6l1-1.8h3.9" stroke={active ? knock : "currentColor"} />
     </svg>
   );
 }
-
-export function RailInbox({ size = 24, ...p }: P) {
+export function IcoStar({ size, active, ...p }: R) {
   return (
-    <svg {...base(size)} {...p}>
-      <path d="M2.5 11.2 12 4l9.5 7.2V18a3 3 0 0 1-3 3h-13a3 3 0 0 1-3-3v-6.8Z" fill="currentColor" />
-      <rect x="6" y="7" width="12" height="9" rx="1.6" fill="var(--surface)" />
-      <path d="M8.5 10h7M8.5 12.6h4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M2.5 11.5 12 17l9.5-5.5V18a3 3 0 0 1-3 3h-13a3 3 0 0 1-3-3v-6.5Z" fill="currentColor" />
+    <svg {...rail(size)} {...p}>
+      <path d="m10 2.8 2.2 4.5 5 .7-3.6 3.5.9 4.9-4.5-2.4-4.5 2.4.9-4.9L2.8 8l5-.7L10 2.8Z" fill={fillIf(active)} />
     </svg>
   );
 }
-
-export function RailFolder({ size = 24, ...p }: P) {
+export function IcoSent({ size, active, ...p }: R) {
   return (
-    <svg {...base(size)} {...p}>
-      <path
-        d="M2.5 7a3 3 0 0 1 3-3h3.6c.8 0 1.56.32 2.12.88L12.6 6.3h5.9a3 3 0 0 1 3 3V17a3 3 0 0 1-3 3h-13a3 3 0 0 1-3-3V7Z"
-        fill="currentColor"
-      />
-      <path d="M2.5 9.5h19" stroke="var(--window)" strokeWidth="1.5" />
+    <svg {...rail(size)} {...p}>
+      <path d="M17.2 2.8 2.9 8.3l5.9 2.9 2.9 5.9 5.5-14.3Z" fill={fillIf(active)} />
+      <path d="m8.8 11.2 3.6-3.6" stroke={active ? knock : "currentColor"} />
     </svg>
   );
 }
-
-export function RailRules({ size = 24, ...p }: P) {
+export function IcoDrafts({ size, active, ...p }: R) {
   return (
-    <svg {...base(size)} {...p}>
-      <rect x="8.5" y="2.5" width="7" height="6" rx="1.8" fill="currentColor" />
-      <rect x="2.5" y="15.5" width="7" height="6" rx="1.8" fill="currentColor" />
-      <rect x="14.5" y="15.5" width="7" height="6" rx="1.8" fill="currentColor" />
-      <path d="M12 8.5v3.5M6 15.5v-1.5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    <svg {...rail(size)} {...p}>
+      <path d="M11.5 2.8H6a2 2 0 0 0-2 2v10.4a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7.3l-4.5-4.5Z" fill={fillIf(active)} />
+      <path d="M11.5 2.8v4.5H16M7.3 11h5.4M7.3 14h3.4" stroke={active ? knock : "currentColor"} />
     </svg>
   );
 }
-
-export function RailTasks({ size = 24, ...p }: P) {
+export function IcoArchive({ size, active, ...p }: R) {
   return (
-    <svg {...base(size)} {...p}>
-      <rect x="4" y="3.5" width="16" height="18" rx="3.2" fill="currentColor" />
-      <rect x="8.5" y="2" width="7" height="4" rx="1.4" fill="currentColor" stroke="var(--window)" strokeWidth="1.5" />
-      <path d="M8 11h8M8 14.5h8M8 18h5" stroke="var(--window)" strokeWidth="1.6" strokeLinecap="round" />
+    <svg {...rail(size)} {...p}>
+      <rect x="2.8" y="3.3" width="14.4" height="4" rx="1.2" fill={fillIf(active)} />
+      <path d="M4.3 7.3v7.4a2 2 0 0 0 2 2h7.4a2 2 0 0 0 2-2V7.3" fill={fillIf(active)} />
+      <path d="M8.3 10.8h3.4" stroke={active ? knock : "currentColor"} />
     </svg>
   );
 }
-
-export function RailDocs({ size = 24, ...p }: P) {
+export function IcoTrash({ size, active, ...p }: R) {
   return (
-    <svg {...base(size)} {...p}>
-      <path d="M5 5.2A2.7 2.7 0 0 1 7.7 2.5h6.1L19.5 8v11.3a2.7 2.7 0 0 1-2.7 2.7H7.7A2.7 2.7 0 0 1 5 19.3V5.2Z" fill="currentColor" />
-      <path d="M13.8 2.5V6.4c0 .9.7 1.6 1.6 1.6h4.1" fill="var(--window)" opacity="0.6" />
-      <path d="M8.5 12h7M8.5 15.2h7M8.5 18.4h4" stroke="var(--window)" strokeWidth="1.6" strokeLinecap="round" />
+    <svg {...rail(size)} {...p}>
+      <path d="M3.3 5.5h13.4M8 5.5V3.8c0-.5.4-1 1-1h2c.6 0 1 .5 1 1v1.7" />
+      <path d="m4.8 5.5.8 10a1.8 1.8 0 0 0 1.8 1.7h5.2a1.8 1.8 0 0 0 1.8-1.7l.8-10" fill={fillIf(active)} />
+      <path d="M8.3 9v4.6M11.7 9v4.6" stroke={active ? knock : "currentColor"} />
+    </svg>
+  );
+}
+export function IcoSettings({ size, active, ...p }: R) {
+  return (
+    <svg {...rail(size)} {...p}>
+      <path d="M3 6h7.5M14.5 6H17M3 14h2.5M9.5 14H17" />
+      <circle cx="12.5" cy="6" r="2" fill={fillIf(active)} />
+      <circle cx="7.5" cy="14" r="2" fill={fillIf(active)} />
     </svg>
   );
 }
@@ -158,18 +158,6 @@ export function FilterLines({ size = 24, ...p }: P) {
   return (
     <svg {...base(size)} {...p}>
       <path d="M3 6.5h18M6.5 12h11M10 17.5h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-export function VerifiedBadge({ size = 20, ...p }: P) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" aria-label="Verified sender" {...p}>
-      <path
-        d="M10 1.2c.9 0 1.6.8 2.4 1.1.8.3 1.9.1 2.6.6.7.6.6 1.6 1 2.4.4.8 1.3 1.4 1.4 2.3.1.9-.7 1.6-.9 2.4-.2.8.1 1.9-.4 2.6-.6.7-1.6.6-2.4 1-.8.4-1.4 1.3-2.3 1.4-.9.1-1.6-.7-2.4-.9H9.9c-.8.2-1.6 1-2.5.9-.9-.1-1.4-1-2.3-1.4-.8-.4-1.8-.3-2.4-1-.5-.7-.2-1.8-.4-2.6-.2-.8-1-1.5-.9-2.4.1-.9 1-1.5 1.4-2.3.4-.8.3-1.8 1-2.4.7-.5 1.8-.3 2.6-.6.8-.3 1.5-1.1 2.4-1.1Z"
-        fill="var(--verified)"
-      />
-      <path d="m6.6 10.2 2.3 2.3 4.6-4.8" stroke="#fff" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -230,6 +218,14 @@ export function ReplyIcon({ size = 18, ...p }: P) {
   return (
     <svg {...base(size)} {...p}>
       <path d="M9.5 6 4 11.5 9.5 17M4.5 11.5H14a6 6 0 0 1 6 6v.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function ForwardIcon({ size = 18, ...p }: P) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M14.5 6 20 11.5 14.5 17M19.5 11.5H10a6 6 0 0 0-6 6v.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

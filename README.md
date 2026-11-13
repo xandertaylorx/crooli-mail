@@ -22,7 +22,7 @@ A fast, modern email client for macOS (Windows coming later), powered by the AI 
 
 ## Status
 
-🚧 **Early build.** The interface is done and runs on sample mail. AI summaries, reply drafts and Continue run through your local Claude Code or Codex. Connecting a real mailbox comes next. See [PLAN.md](PLAN.md).
+🚧 **Early build.** It connects to Gmail, iCloud, Yahoo, Fastmail or any IMAP mailbox with an app password, and the app shows you exactly how for each provider. Outlook needs Microsoft sign-in, which comes next. AI summaries, reply drafts and Continue run through your local Claude Code or Codex. See [PLAN.md](PLAN.md).
 
 ## Install
 
@@ -31,6 +31,8 @@ curl -fsSL https://mail.crooli.com/install.sh | bash
 ```
 
 Website: [mail.crooli.com](https://mail.crooli.com). The installer downloads the latest release from GitHub into `/Applications`. Files fetched with curl aren't quarantined, so there's no Gatekeeper prompt.
+
+Mail updates itself: it checks for new versions at launch and shows an **Update** button when one is ready (Settings → Updates). Updates are signed by Crooli and only install when you press the button.
 
 ## Run from source
 
