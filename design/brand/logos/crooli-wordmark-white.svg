@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="102" height="24" viewBox="0 0 102 24" fill="none" color="#ededed" aria-label="Crooli">
+  <!-- Lockup: mark + live text. Needs Plus Jakarta Sans 800 loaded (bundle it in the app). -->
+  <svg x="0" y="0" width="24" height="24" viewBox="0 0 32 32"><path d="M8 16a8 8 0 0 1 8-8c2.5 0 4.5 1 6 2.5m2 5.5a8 8 0 0 1-8 8c-2.5 0-4.5-1-6-2.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="16" r="3" fill="currentColor"/></svg>
+  <text x="34" y="18.6" fill="currentColor" font-family="'Plus Jakarta Sans', Montserrat, 'Avenir Next', sans-serif" font-weight="800" font-size="18.4" letter-spacing="-0.55">Crooli</text>
+</svg>

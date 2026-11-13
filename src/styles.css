@@ -1,0 +1,302 @@
+@import "tailwindcss";
+/* Scan the app sources explicitly so the website (web/) can build these components too. */
+@source "./";
+
+/* Crooli Sans — the Crooli typeface (OFL). See design/brand/fonts/OFL.txt */
+@font-face {
+  font-family: "Crooli Sans";
+  src: url("./assets/fonts/CrooliSans-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Crooli Sans";
+  src: url("./assets/fonts/CrooliSans-Italic-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: block;
+}
+
+/*
+  Tokens. Light values are measured from design/reference/*.png (the layout spec).
+  Dark values come from the Crooli brand tokens (design/brand/tokens.json).
+*/
+:root {
+  --window: #fcfcfc;
+  --canvas: #fafafa;
+  --surface: #ffffff;
+  --line: #ebebeb;
+  --line-soft: #f1f1f2;
+  --row-selected: #fafafa;
+  --row-hover: #fcfcfc;
+  --ink: #262626;
+  --ink-2: #323232;
+  --ink-title: #4a4a4c;
+  --ink-muted: #686868;
+  --ink-faint: #a3a3a3;
+  --icon: #7d7d7d;
+  --icon-active: #2f2f2f;
+  --pill: #f5f5f5;
+  --pill-hover: #f0f0f0;
+  --checkbox: #cecece;
+  --dot: #cdcdcd;
+  --meter-off: #f0f0f0;
+  --claude: #dc7355;
+  --openai: #000000;
+  --verified: #33bbf6;
+  --focus: #0a6cf0;
+  --btn-top: #3a3a3a;
+  --btn-bottom: #161616;
+  --btn-ink: #ffffff;
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  --tile-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --overlay: rgba(250, 250, 250, 0.72);
+  --ink-preview: #333333;
+  --ink-pill: #4a4a4a;
+  --date-unread: #0e0e0e;
+  --divider: #e4e4e4;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --window: #0a0a0a;
+    --canvas: #0d0d0d;
+    --surface: #141414;
+    --line: #1f1f1f;
+    --line-soft: #1a1a1a;
+    --row-selected: #1a1a1a;
+    --row-hover: #171717;
+    --ink: #ededed;
+    --ink-2: #e0e0e0;
+    --ink-title: #a1a1a1;
+    --ink-muted: #8a8a8a;
+    --ink-faint: #5c5c5c;
+    --icon: #7d7d7d;
+    --icon-active: #ededed;
+    --pill: #1c1c1c;
+    --pill-hover: #222222;
+    --checkbox: #3a3a3a;
+    --dot: #3a3a3a;
+    --meter-off: #262626;
+    --openai: #ededed;
+    --focus: #52a8ff;
+    --btn-top: #f4f4f4;
+    --btn-bottom: #dcdcdc;
+    --btn-ink: #0a0a0a;
+    --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --tile-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --overlay: rgba(10, 10, 10, 0.72);
+    --banner-dim: 0.88;
+    --ink-preview: #a1a1a1;
+    --ink-pill: #a1a1a1;
+    --date-unread: #ededed;
+    --divider: #1f1f1f;
+    color-scheme: dark;
+  }
+}
+
+/* Forced dark (website demos use data-theme="dark"). Keep in sync with the block above. */
+:root[data-theme="dark"] {
+  --window: #0a0a0a;
+  --canvas: #0d0d0d;
+  --surface: #141414;
+  --line: #1f1f1f;
+  --line-soft: #1a1a1a;
+  --row-selected: #1a1a1a;
+  --row-hover: #171717;
+  --ink: #ededed;
+  --ink-2: #e0e0e0;
+  --ink-title: #a1a1a1;
+  --ink-muted: #8a8a8a;
+  --ink-faint: #5c5c5c;
+  --icon: #7d7d7d;
+  --icon-active: #ededed;
+  --pill: #1c1c1c;
+  --pill-hover: #222222;
+  --checkbox: #3a3a3a;
+  --dot: #3a3a3a;
+  --meter-off: #262626;
+  --openai: #ededed;
+  --focus: #52a8ff;
+  --btn-top: #f4f4f4;
+  --btn-bottom: #dcdcdc;
+  --btn-ink: #0a0a0a;
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --tile-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --overlay: rgba(10, 10, 10, 0.72);
+  --banner-dim: 0.88;
+  --ink-preview: #a1a1a1;
+  --ink-pill: #a1a1a1;
+  --date-unread: #ededed;
+  --divider: #1f1f1f;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: "Crooli Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-window: var(--window);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-title: var(--ink-title);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-icon: var(--icon);
+  --color-icon-active: var(--icon-active);
+  --color-pill: var(--pill);
+  --color-claude: var(--claude);
+  --color-verified: var(--verified);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--window);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+
+.selectable {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+button {
+  cursor: default;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Thin, quiet scrollbars */
+.scroll-quiet {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.scroll-quiet:hover {
+  scrollbar-color: var(--line) transparent;
+}
+/* WebKit (the Tauri webview): a fixed 8px bar that lives inside the right padding,
+   so classic macOS scrollbars never squeeze the layout. */
+.scroll-quiet::-webkit-scrollbar {
+  width: 8px;
+}
+.scroll-quiet::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-quiet::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 8px;
+}
+.scroll-quiet:hover::-webkit-scrollbar-thumb {
+  background: var(--line);
+}
+/* The list column keeps the reference's exact card width, so its scrollbar is hidden
+   (trackpad, wheel and J/K still scroll it). */
+.list-column {
+  padding-right: 23px;
+  scrollbar-width: none;
+}
+.list-column::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* The black "Continue" pill */
+.btn-continue {
+  background: linear-gradient(180deg, var(--btn-top) 0%, var(--btn-bottom) 100%);
+  color: var(--btn-ink);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 1px 2px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(0, 0, 0, 0.6);
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), filter 160ms;
+}
+.btn-continue:hover {
+  filter: brightness(1.12);
+}
+.btn-continue:active {
+  transform: scale(0.98);
+}
+
+/* Streaming caret */
+.caret::after {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  border-radius: 2px;
+  background: currentColor;
+  animation: blink 1s steps(2, start) infinite;
+}
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.pop-in {
+  animation: pop-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes bar-in {
+  from {
+    transform: scaleY(0.2);
+    opacity: 0;
+  }
+}
+.meter-bar {
+  transform-origin: bottom;
+  animation: bar-in 500ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,0 +1,28 @@
+[package]
+name = "crooli-mail"
+version = "0.1.0"
+description = "Crooli Mail"
+authors = ["Crooli"]
+edition = "2021"
+
+[lib]
+name = "crooli_mail_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["macos-private-api"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["process", "io-util", "rt", "sync", "macros"] }
+base64 = "0.22"
+dirs = "6"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true
