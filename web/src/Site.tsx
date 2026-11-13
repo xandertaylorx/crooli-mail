@@ -175,7 +175,7 @@ function AppFrame({
       </div>
       {scale > 0 && (
         <iframe
-          src={`/demo/${scene ? `?${scene}` : ""}`}
+          src={`/demo${scene ? `?${scene}` : ""}`}
           title={title}
           loading={eager ? "eager" : "lazy"}
           tabIndex={interactive ? 0 : -1}
