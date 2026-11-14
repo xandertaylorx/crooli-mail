@@ -61,6 +61,14 @@ const css = (p, light) => {
 };
 
 const win = (scene, dark) => `<div class="win" style="--wbg:${dark ? "#0a0a0a" : "#fcfcfc"}"><div class="lights"><i></i><i></i><i></i></div><iframe src="https://mail.crooli.com/demo?${scene}" scrolling="no"></iframe></div>`;
+// Just the reader pane of the app (the right-hand card), shown large. side: where the card sits.
+const PANE = { x: 463, y: 127, w: 954, h: 770 };
+const pane = (scene, side = "right") => {
+  const W = 880, s = W / PANE.w, H = Math.round(PANE.h * s);
+  const left = side === "right" ? 640 : 80;
+  return `<div style="position:absolute;left:${left}px;top:${Math.round((900 - H) / 2 + 24)}px;width:${W}px;height:${H}px;overflow:hidden;border-radius:18px;background:#fff;box-shadow:0 50px 100px -30px rgba(0,0,0,.5),0 0 0 1px rgba(0,0,0,.12);z-index:2"><iframe src="https://mail.crooli.com/demo?${scene}" scrolling="no" style="position:absolute;border:0;width:1440px;height:920px;left:${-PANE.x * s}px;top:${-PANE.y * s}px;transform:scale(${s});transform-origin:0 0"></iframe></div>`;
+};
+const split = (title, dim, sub, side = "right") => `<div style="position:absolute;${side === "right" ? "left:80px" : "left:1020px"};top:240px;width:500px;z-index:3;${side === "right" ? "" : "text-align:left"}"><h1 style="font-size:66px">${title}${dim ? `<br><span class="dim">${dim}</span>` : ""}</h1><p class="sub" style="font-size:24px">${sub}</p></div>`;
 const head = (title, dim, sub) => `<div class="head"><h1>${title}${dim ? `<br><span class="dim">${dim}</span>` : ""}</h1>${sub ? `<p class="sub">${sub}</p>` : ""}</div>`;
 const page = (p, body, opts = {}) => `<!doctype html><meta charset="utf-8"><style>${css(p, opts.light)}${opts.css ?? ""}</style><body><div class="brand">${MARK}Mail</div>${opts.tag === false ? "" : `<div class="tag">mail.crooli.com</div>`}${body}</body>`;
 
@@ -68,11 +76,11 @@ const keys = (k) => k.map((x) => `<kbd>${x}</kbd>`).join("");
 
 const images = [
   { id: "01-hero", p: "sky", wait: 5000, html: page("sky", head("An email client", "with your AI in it.", "Free for Mac. Works with Gmail, iCloud and any IMAP inbox. No account.") + win("theme=light&banner=off")) },
-  { id: "02-continue", p: "dawn", wait: 9000, html: page("dawn", head("One button.", "Your inbox, sorted.", "Your AI reads what came in and sorts it into what needs you, what is just for information and what can go.") + win("scene=continue&theme=light&banner=off")) },
-  { id: "03-draft", p: "garden", wait: 9000, html: page("garden", head("Replies that sound like you.", "Not like a robot.", "Press Draft with AI and the reply writes itself into the box. Edit it, send it with ⌘ Return.") + win("scene=draft&theme=light&banner=off")) },
-  { id: "04-connect", p: "lapis", wait: 5000, html: page("lapis", head("Your mail in two minutes.", "Step by step, for your provider.", "Gmail, iCloud, Yahoo, Fastmail or any IMAP server. Mail shows you exactly what to click.") + win("scene=connect&theme=light&banner=off")) },
+  { id: "02-continue", p: "dawn", wait: 9000, html: page("dawn", split("One button.", "Your inbox, sorted.", "Your AI reads what came in and sorts it into what needs you, what is just for information and what can go.") + pane("scene=continue&theme=light&banner=off")) },
+  { id: "03-draft", p: "garden", wait: 9000, html: page("garden", split("Replies that sound like you.", "Not like a robot.", "Press Draft with AI and the reply writes itself into the box. Edit it, then send it.", "left") + pane("scene=draft&theme=light&banner=off", "left")) },
+  { id: "04-connect", p: "lapis", wait: 5000, html: page("lapis", split("Your mail in two minutes.", "Step by step.", "Gmail, iCloud, Yahoo, Fastmail or any IMAP server. Mail shows you exactly what to click.") + pane("scene=connect&theme=light&banner=off")) },
   { id: "05-dark", p: "ink", wait: 5000, html: page("ink", head("Light or dark.", "Claude or Codex.", "A tight, quiet layout with a proper dark mode, set in Crooli Sans.") + win("theme=dark&provider=codex&select=2&banner=off", true)) },
-  { id: "06-ai-settings", p: "clay", wait: 5000, html: page("clay", head("Uses the plan", "you already pay for.", "Mail finds Claude Code or Codex on your Mac, picks the lightest model, and shows how much of your limit is left.") + win("scene=settings&theme=light&banner=off")) },
+  { id: "06-ai-settings", p: "clay", wait: 5000, html: page("clay", split("Uses the plan", "you already pay for.", "Mail finds Claude Code or Codex on your Mac, picks the lightest model, and shows how much of your limit is left.", "left") + pane("scene=settings&theme=light&banner=off", "left")) },
   {
     id: "07-install", p: "lapis", wait: 1500,
     html: page("lapis", `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding-top:30px">
