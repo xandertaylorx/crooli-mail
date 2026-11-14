@@ -215,21 +215,17 @@ function MessageView({ email }: { email: Email }) {
 
   const outgoing = email.folder === "sent";
 
-  const forward = () => {
-    const when = email.date.toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-    const header = [
-      "---------- Forwarded message ----------",
-      `From: ${email.fromName}${email.fromAddress && !outgoing ? ` <${email.fromAddress}>` : ""}`,
-      `Date: ${when}`,
-      `Subject: ${email.subject}`,
-      email.to ? `To: ${email.to}` : "",
-    ]
-      .filter(Boolean)
-      .join("\n");
+  const forward = async () => {
+    // Make sure the whole message is loaded, not just the preview.
+    if (LIVE && !email.bodyLoaded) await useStore.getState().loadBody(email.id);
+    const m = useStore.getState().mail.find((x) => x.id === email.id) ?? email;
+    const when = m.date.toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    const from = m.fromAddress && !outgoing ? `${m.fromName} <${m.fromAddress}>` : m.fromName;
+    const header = ["---------- Forwarded message ----------", `From: ${from}`, `Date: ${when}`, `Subject: ${m.subject}`, m.to ? `To: ${m.to}` : ""].filter(Boolean).join("\n");
     useStore.getState().openCompose({
       to: "",
-      subject: /^fwd?:/i.test(email.subject) ? email.subject : `Fwd: ${email.subject}`,
-      body: `\n\n${header}\n\n${email.body || email.preview}`,
+      subject: /^fwd?:/i.test(m.subject) ? m.subject : `Fwd: ${m.subject}`,
+      body: `\n\n${header}\n\n${(m.body || m.preview).trim()}\n`,
     });
   };
 
@@ -544,7 +540,7 @@ function ComposeView({ seed }: { seed: ComposeSeed }) {
       <div className="flex min-h-0 flex-1 flex-col px-[20px]">
         <label className="flex items-center gap-[10px] border-b border-line-soft py-[11px]">
           <span className="w-[56px] text-[13px] text-ink-muted">To</span>
-          <RecipientInput autoFocus={!to} value={to} onChange={setTo} className={field} placeholder="Start typing a name or address" />
+          <RecipientInput autoFocus={LIVE && !to} value={to} onChange={setTo} className={field} placeholder="Start typing a name or address" />
           {!showCc && (
             <button type="button" onClick={() => setShowCc(true)} className="text-[12.5px] text-ink-faint hover:text-ink">
               Cc
@@ -562,7 +558,7 @@ function ComposeView({ seed }: { seed: ComposeSeed }) {
           <input value={subject} onChange={(e) => setSubject(e.target.value)} className={field} />
         </label>
         <textarea
-          autoFocus={!!to}
+          autoFocus={LIVE && !!to}
           value={body}
           onChange={(e) => setBody(e.target.value)}
           className={"min-h-0 flex-1 resize-none py-[14px] leading-[1.6] " + field + (run.status === "running" ? " caret" : "")}

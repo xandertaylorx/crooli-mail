@@ -174,7 +174,7 @@ export function ConnectPanel() {
                     placeholder={key === "icloud" ? "you@icloud.com" : key === "gmail" ? "you@gmail.com" : "you@example.com"}
                     autoComplete="email"
                     inputMode="email"
-                    autoFocus
+                    autoFocus={LIVE}
                   />
                 </label>
               </div>

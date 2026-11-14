@@ -312,35 +312,159 @@ fn squash(s: &str, max: usize) -> String {
     out.trim().to_string()
 }
 
+fn decode_entities(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut rest = s;
+    while let Some(i) = rest.find('&') {
+        out.push_str(&rest[..i]);
+        let tail = &rest[i..];
+        let end = tail.find(';').filter(|e| *e <= 10);
+        let Some(e) = end else {
+            out.push('&');
+            rest = &tail[1..];
+            continue;
+        };
+        let name = &tail[1..e];
+        let ch = match name {
+            "amp" => Some('&'),
+            "lt" => Some('<'),
+            "gt" => Some('>'),
+            "quot" => Some('"'),
+            "apos" => Some('\''),
+            "nbsp" => Some(' '),
+            "rsquo" | "lsquo" => Some('\''),
+            "ldquo" | "rdquo" => Some('"'),
+            "ndash" => Some('–'),
+            "mdash" => Some('—'),
+            "hellip" => Some('…'),
+            "copy" => Some('©'),
+            "reg" => Some('®'),
+            "pound" => Some('£'),
+            "euro" => Some('€'),
+            "bull" => Some('•'),
+            "zwnj" | "zwj" | "shy" => Some('\u{0}'),
+            _ => name
+                .strip_prefix('#')
+                .and_then(|n| if let Some(h) = n.strip_prefix(['x', 'X']) { u32::from_str_radix(h, 16).ok() } else { n.parse().ok() })
+                .and_then(char::from_u32),
+        };
+        match ch {
+            Some('\u{0}') => {}
+            Some(c) => out.push(c),
+            None => out.push_str(&tail[..=e]),
+        }
+        rest = &tail[e + 1..];
+    }
+    out.push_str(rest);
+    out
+}
+
+/// Turns HTML into readable plain text: paragraphs, list bullets, short links kept, scripts dropped.
 fn html_to_text(html: &str) -> String {
+    let chars: Vec<char> = html.chars().collect();
+    let lower: Vec<char> = html.to_lowercase().chars().collect();
+    let starts = |i: usize, pat: &str| pat.chars().enumerate().all(|(k, c)| lower.get(i + k) == Some(&c));
     let mut out = String::new();
-    let mut in_tag = false;
-    let mut skip = false;
-    let lower = html.to_lowercase();
-    let bytes: Vec<char> = html.chars().collect();
-    let lchars: Vec<char> = lower.chars().collect();
+    let mut skip: Option<&str> = None;
+    let mut href: Option<String> = None;
+    let mut link_start = 0;
     let mut i = 0;
-    while i < bytes.len() {
-        let c = bytes[i];
-        if c == '<' {
-            let rest: String = lchars[i..(i + 8).min(lchars.len())].iter().collect();
-            if rest.starts_with("<style") || rest.starts_with("<script") || rest.starts_with("<head") {
-                skip = true;
-            } else if rest.starts_with("</style") || rest.starts_with("</script") || rest.starts_with("</head") {
-                skip = false;
+    while i < chars.len() {
+        if chars[i] == '<' {
+            let end = (i..chars.len()).find(|&k| chars[k] == '>').unwrap_or(chars.len() - 1);
+            if let Some(tag) = skip {
+                if starts(i, &format!("</{tag}")) {
+                    skip = None;
+                }
+                i = end + 1;
+                continue;
             }
-            if rest.starts_with("<br") || rest.starts_with("<p") || rest.starts_with("</p") || rest.starts_with("<div") || rest.starts_with("<tr") {
-                out.push('\n');
+            for tag in ["style", "script", "head", "title"] {
+                if starts(i, &format!("<{tag}")) {
+                    skip = Some(tag);
+                }
             }
-            in_tag = true;
-        } else if c == '>' {
-            in_tag = false;
-        } else if !in_tag && !skip {
-            out.push(c);
+            let block = ["<br", "<p", "</p", "<div", "</div", "<tr", "<h1", "<h2", "<h3", "<h4", "</h1", "</h2", "</h3", "<hr", "<table", "</table", "<blockquote", "</ul", "</ol"];
+            if skip.is_none() {
+                if starts(i, "<li") {
+                    out.push_str("\n• ");
+                } else if block.iter().any(|b| starts(i, b)) {
+                    out.push('\n');
+                } else if starts(i, "</td") || starts(i, "</th") {
+                    out.push(' ');
+                }
+                if starts(i, "<a ") {
+                    let tag: String = chars[i..=end].iter().collect();
+                    let l = tag.to_lowercase();
+                    href = l.find("href=").and_then(|k| {
+                        let r = &tag[k + 5..];
+                        let q = r.chars().next()?;
+                        if q == '"' || q == '\'' {
+                            r[1..].find(q).map(|e| r[1..1 + e].to_string())
+                        } else {
+                            r.split([' ', '>']).next().map(String::from)
+                        }
+                    });
+                    link_start = out.len();
+                } else if starts(i, "</a") {
+                    if let Some(h) = href.take() {
+                        let text = out[link_start..].trim().to_string();
+                        // Keep short, meaningful links. Tracking URLs are long, so they're left out.
+                        if h.starts_with("http") && h.len() <= 70 && !text.is_empty() && !text.contains(&h) && !text.starts_with("http") {
+                            out.push_str(&format!(" ({h})"));
+                        }
+                    }
+                }
+            }
+            i = end + 1;
+            continue;
+        }
+        if skip.is_none() {
+            out.push(chars[i]);
         }
         i += 1;
     }
-    out.replace("&nbsp;", " ").replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&#39;", "'").replace("&zwnj;", "")
+    clean_text(&decode_entities(&out))
+}
+
+/// Makes email text readable: strips invisible padding characters and long tracking URLs,
+/// trims line ends, and collapses runs of blank lines.
+fn clean_text(s: &str) -> String {
+    let invisible = |c: char| matches!(c, '\u{200B}'..='\u{200F}' | '\u{2060}' | '\u{FEFF}' | '\u{034F}' | '\u{00AD}' | '\u{2028}' | '\u{2029}');
+    let mut lines: Vec<String> = Vec::new();
+    for raw in s.replace("\r\n", "\n").replace('\r', "\n").lines() {
+        let line: String = raw.chars().filter(|c| !invisible(*c)).map(|c| if c == '\u{00A0}' || c == '\t' { ' ' } else { c }).collect();
+        let indent: String = line.chars().take_while(|c| *c == ' ' || *c == '>').collect();
+        let tokens: Vec<String> = line
+            .split_whitespace()
+            .map(|tok| {
+                let bare = tok.trim_matches(|c| "<>[]()".contains(c));
+                if (bare.starts_with("http://") || bare.starts_with("https://")) && bare.len() > 80 { "[link]".to_string() } else { tok.to_string() }
+            })
+            .collect();
+        let mut text = tokens.join(" ");
+        // "[link] [link]" or lines with only links and punctuation are noise.
+        let words: Vec<&str> = text.split_whitespace().filter(|w| *w != "[link]" && !w.chars().all(|c| "|-–—•·*_=~".contains(c))).collect();
+        if words.is_empty() && text.contains("[link]") {
+            text.clear();
+        }
+        lines.push(if text.is_empty() { String::new() } else { format!("{indent}{text}") });
+    }
+    let mut out = String::new();
+    let mut blanks = 0;
+    for l in lines {
+        if l.trim().is_empty() {
+            blanks += 1;
+            if blanks <= 1 && !out.is_empty() {
+                out.push('\n');
+            }
+        } else {
+            blanks = 0;
+            out.push_str(l.trim_end());
+            out.push('\n');
+        }
+    }
+    out.trim().to_string()
 }
 
 fn preview_of(raw: &[u8]) -> String {
@@ -555,6 +679,7 @@ pub async fn get_message(email: String, folder: String, uid: u32) -> Result<Body
             .body_text(0)
             .map(|t| t.into_owned())
             .filter(|t| !t.trim().is_empty())
+            .map(|t| clean_text(&t))
             .or_else(|| html.as_deref().map(html_to_text))
             .unwrap_or_default();
         let list = |a: Option<&mail_parser::Address>| -> String {
@@ -775,8 +900,17 @@ mod tests {
     }
 
     #[test]
+    fn forward_text_is_readable() {
+        let html = "<html><head><title>x</title><style>.a{color:red}</style></head><body><p>It&rsquo;s &#163;20 &amp; free&hellip;</p><ul><li>One</li><li>Two</li></ul><p><a href=\"https://example.com/verify\">Verify email</a></p><p><a href=\"https://track.example.com/c/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\">Open</a></p>&zwnj;&nbsp;&zwnj;&nbsp;</body></html>";
+        let t = html_to_text(html);
+        assert_eq!(t, "It’s £20 & free…\n\n• One\n• Two\n\nVerify email (https://example.com/verify)\n\nOpen".replace('’', "'"));
+        let messy = "Hi there\u{200c} \u{034f}\u{200c}\n\n\n\n\nView online <https://click.example.com/x/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA>\n[https://click.example.com/y/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB]\n\nThanks";
+        assert_eq!(clean_text(messy), "Hi there\n\nView online [link]\n\nThanks");
+    }
+
+    #[test]
     fn html_and_previews() {
-        assert_eq!(html_to_text("<style>x{}</style><p>Hello&nbsp;<b>there</b></p>").trim(), "Hello there");
+        assert_eq!(html_to_text("<style>x{}</style><p>Hello&nbsp;<b>there</b></p>"), "Hello there");
         let raw = b"From: A <a@x.com>\r\nSubject: Hi\r\nContent-Type: text/plain\r\n\r\nNew line here\r\n> old quoted\r\n";
         assert_eq!(preview_of(raw), "New line here");
         assert_eq!(decode_header_value(b"=?UTF-8?B?wqMyLDQ1MCBpcyBvbiBpdHMgd2F5?="), "£2,450 is on its way");
