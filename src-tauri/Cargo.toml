@@ -1,6 +1,6 @@
 [package]
 name = "crooli-mail"
-version = "0.2.0"
+version = "0.2.1"
 description = "Crooli Mail"
 authors = ["Crooli"]
 edition = "2021"
