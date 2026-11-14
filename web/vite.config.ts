@@ -29,7 +29,7 @@ const demoRoute: Plugin = {
 export default defineConfig({
   plugins: [react(), tailwindcss(), demoRoute],
   resolve: {
-    dedupe: ["react", "react-dom", "zustand", "@tanstack/react-virtual", "@tauri-apps/api"],
+    dedupe: ["react", "react-dom", "zustand", "@tanstack/react-virtual", "@tauri-apps/api", "@tauri-apps/plugin-updater", "@tauri-apps/plugin-process"],
     alias: [
       { find: "@app", replacement: resolve(here, "../src") },
       { find: /^tailwindcss$/, replacement: mod("tailwindcss") },
