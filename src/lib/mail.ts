@@ -57,6 +57,8 @@ export interface Outgoing {
   body: string;
   inReplyTo?: string | null;
   references?: string | null;
+  /** HTML version of the message (forwards keep the original's design). */
+  html?: string | null;
 }
 
 export const mailApi = {

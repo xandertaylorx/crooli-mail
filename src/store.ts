@@ -20,6 +20,16 @@ export interface ComposeSeed {
   references?: string | null;
   /** Editing an existing draft: it's replaced when saved or sent. */
   draftId?: number;
+  /** A forwarded message, shown under the note and sent as it was received. */
+  forward?: ForwardSeed;
+}
+
+export interface ForwardSeed {
+  /** Plain-text header block (From, Date, Subject, To) */
+  headerText: string;
+  headerHtml: string;
+  text: string;
+  html: string | null;
 }
 
 /** Models Crooli asks the agent to use. Mail work is light, so the defaults are the smallest. */

@@ -6,7 +6,7 @@
 
 use chrono::Utc;
 use imap::types::{Fetch, Flag, NameAttribute};
-use lettre::message::{header::ContentType, Mailbox, Message};
+use lettre::message::{header::ContentType, Mailbox, Message, MultiPart};
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{SmtpTransport, Transport};
 use mail_parser::{MessageParser, MimeHeaders};
@@ -790,6 +790,9 @@ pub struct Outgoing {
     in_reply_to: Option<String>,
     #[serde(default)]
     references: Option<String>,
+    /// Optional HTML version (used by forwards, so the original keeps its design).
+    #[serde(default)]
+    html: Option<String>,
 }
 
 fn build(acct: &Account, o: &Outgoing) -> Result<Message, String> {
@@ -813,7 +816,10 @@ fn build(acct: &Account, o: &Outgoing) -> Result<Message, String> {
     if !any {
         return Err("Add someone to send it to.".into());
     }
-    b.header(ContentType::TEXT_PLAIN).body(o.body.clone()).map_err(|e| e.to_string())
+    match &o.html {
+        Some(h) if !h.trim().is_empty() => b.multipart(MultiPart::alternative_plain_html(o.body.clone(), h.clone())).map_err(|e| e.to_string()),
+        _ => b.header(ContentType::TEXT_PLAIN).body(o.body.clone()).map_err(|e| e.to_string()),
+    }
 }
 
 #[tauri::command]
@@ -896,7 +902,7 @@ mod tests {
     }
 
     fn out(subject: &str) -> Outgoing {
-        Outgoing { to: "test@localhost".into(), cc: String::new(), subject: subject.into(), body: "Hi,\n\nThis came through Crooli Mail.\n\n> quoted line".into(), in_reply_to: None, references: None }
+        Outgoing { to: "test@localhost".into(), cc: String::new(), subject: subject.into(), body: "Hi,\n\nThis came through Crooli Mail.\n\n> quoted line".into(), in_reply_to: None, references: None, html: None }
     }
 
     #[test]

@@ -77,7 +77,7 @@ function simulate(prompt: string, onEvent: (e: AgentEvent) => void) {
     : prompt.includes("DRAFT")
       ? "Hi Noor,\n\nHappy to help. Thursday morning works well for me. Would 10.00 suit? If it’s easier, I can send written notes on the onboarding flow beforehand.\n\nBest,"
       : prompt.includes("TRIAGE")
-        ? "**Needs you**\n• Noor Calloway wants 20 minutes this week for UX feedback. Suggest Thursday 10.00.\n\n**For your information**\n• Larkspur Pay: your £2,450.00 withdrawal is on its way (1–3 working days).\n• Tidewell Weekly: five new posts from writers you follow.\n\n**Can go**\n• Older newsletters you haven’t opened."
+        ? "**Needs you**\n- **Noor Calloway**: wants 20 minutes this week for UX feedback. Suggest Thursday 10.00.\n\n**For your information**\n- **Larkspur Pay**: your £2,450.00 withdrawal is on its way (1–3 working days).\n- **Tidewell Weekly**: five new posts from writers you follow.\n\n**Can go**\n- **Newsletters**: older issues you haven’t opened."
         : "Noor wants 20 minutes this week for feedback on the product’s UX: Tuesday after 14.00 or Thursday morning, or written notes on onboarding instead.";
   let i = 0;
   const id = window.setInterval(() => {

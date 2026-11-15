@@ -95,6 +95,16 @@ function PanelHeader({ title, sub, onClose, children }: { title: string; sub?: s
   );
 }
 
+const escapeHtml = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/** Strips the document wrapper so an email can sit inside another message, keeping its styles. */
+const innerHtml = (h: string) =>
+  h
+    .replace(/<!doctype[^>]*>/gi, "")
+    .replace(/<\/?(html|body|head)[^>]*>/gi, "")
+    .replace(/<title[\s\S]*?<\/title>/gi, "")
+    .replace(/<meta[^>]*>/gi, "");
+
 const emailContext = (m: Email) => `From: ${m.fromName} <${m.fromAddress}>\nDate: ${m.date.toUTCString()}\nSubject: ${m.subject}\n\n${m.body || m.preview}`;
 
 const btnGhost =
@@ -104,12 +114,37 @@ const btnQuiet =
   "flex h-[30px] items-center gap-[6px] rounded-[8px] px-[10px] text-[13px] font-medium text-ink-2 transition-colors hover:bg-pill disabled:opacity-40 disabled:hover:bg-transparent";
 
 
-/** HTML email in a locked-down frame: no scripts, and remote content only if Settings allow it. */
-function HtmlBody({ html, images }: { html: string; images: boolean }) {
+function useIsDark() {
+  const read = () => {
+    const forced = document.documentElement.dataset.theme;
+    return forced === "dark" || (forced !== "light" && typeof matchMedia !== "undefined" && matchMedia("(prefers-color-scheme: dark)").matches);
+  };
+  const [dark, setDark] = useState(read);
+  useEffect(() => {
+    const on = () => setDark(read());
+    const q = typeof matchMedia !== "undefined" ? matchMedia("(prefers-color-scheme: dark)") : null;
+    q?.addEventListener("change", on);
+    const mo = new MutationObserver(on);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    on();
+    return () => {
+      q?.removeEventListener("change", on);
+      mo.disconnect();
+    };
+  }, []);
+  return dark;
+}
+
+/** HTML email in a locked-down frame: no scripts, and remote content only if Settings allow it.
+ *  In dark mode the page is inverted (images are turned back) so it reads as light text on dark grey. */
+export function HtmlBody({ html, images, className = "mt-[18px]" }: { html: string; images: boolean; className?: string }) {
   const ref = useRef<HTMLIFrameElement>(null);
   const [h, setH] = useState(200);
+  const dark = useIsDark();
   const csp = `default-src 'none'; style-src 'unsafe-inline'; font-src data:; img-src data: cid:${images ? " https: http:" : ""};`;
-  const doc = `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp}"><base target="_blank"><style>html,body{margin:0;background:#fff;color:#222;font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;word-wrap:break-word}body{padding:18px 20px}img{max-width:100%;height:auto}table{max-width:100%}a{color:#0a6cf0}${images ? "" : 'img[src^="http"],img[src^="//"]{display:none!important}'}</style></head><body>${html}</body></html>`;
+  const base = dark ? "#e6e6e6" : "#fff";
+  const darkCss = dark ? "img,video,picture,svg{filter:invert(1) hue-rotate(180deg)}" : "";
+  const doc = `<!doctype html><html><head><meta charset="utf-8"><meta name="color-scheme" content="light"><meta http-equiv="Content-Security-Policy" content="${csp}"><base target="_blank"><style>html,body{margin:0;background:${base};color:#222;font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;word-wrap:break-word}body{padding:18px 20px}img{max-width:100%;height:auto}table{max-width:100%}a{color:#0a6cf0}${darkCss}${images ? "" : 'img[src^="http"],img[src^="//"]{display:none!important}'}</style></head><body>${html}</body></html>`;
 
   useLayoutEffect(() => {
     const f = ref.current;
@@ -135,9 +170,16 @@ function HtmlBody({ html, images }: { html: string; images: boolean }) {
   }, [doc]);
 
   return (
-    <div className="mt-[18px] overflow-hidden rounded-[10px] bg-white">
+    <div className={className + " overflow-hidden rounded-[10px]"} style={{ background: dark ? "#191919" : "#fff" }}>
       {/* allow-same-origin (without scripts) only so we can size the frame and catch link clicks */}
-      <iframe ref={ref} title="Message" sandbox="allow-same-origin allow-popups" srcDoc={doc} style={{ height: h }} className="block w-full border-0" />
+      <iframe
+        ref={ref}
+        title="Message"
+        sandbox="allow-same-origin allow-popups"
+        srcDoc={doc}
+        style={{ height: h, filter: dark ? "invert(1) hue-rotate(180deg)" : undefined }}
+        className="block w-full border-0"
+      />
     </div>
   );
 }
@@ -221,11 +263,18 @@ function MessageView({ email }: { email: Email }) {
     const m = useStore.getState().mail.find((x) => x.id === email.id) ?? email;
     const when = m.date.toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
     const from = m.fromAddress && !outgoing ? `${m.fromName} <${m.fromAddress}>` : m.fromName;
-    const header = ["---------- Forwarded message ----------", `From: ${from}`, `Date: ${when}`, `Subject: ${m.subject}`, m.to ? `To: ${m.to}` : ""].filter(Boolean).join("\n");
+    const rows: [string, string][] = [["From", from], ["Date", when], ["Subject", m.subject], ["To", m.to ?? ""]];
+    const kept = rows.filter(([, v]) => v);
+    const headerText = ["---------- Forwarded message ----------", ...kept.map(([k, v]) => `${k}: ${v}`)].join("\n");
+    const headerHtml =
+      `<div style="font:13px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#555"><b>---------- Forwarded message ----------</b><br>` +
+      kept.map(([k, v]) => `${k}: ${k === "From" ? `<b>${escapeHtml(v)}</b>` : escapeHtml(v)}`).join("<br>") +
+      "</div>";
     useStore.getState().openCompose({
       to: "",
       subject: /^fwd?:/i.test(m.subject) ? m.subject : `Fwd: ${m.subject}`,
-      body: `\n\n${header}\n\n${(m.body || m.preview).trim()}\n`,
+      body: "",
+      forward: { headerText, headerHtml, text: (m.body || m.preview).trim(), html: m.html ?? null },
     });
   };
 
@@ -405,52 +454,154 @@ function MessageView({ email }: { email: Email }) {
   );
 }
 
+interface TriageItem {
+  n: number | null;
+  who: string;
+  text: string;
+}
+interface TriageGroup {
+  title: string;
+  items: TriageItem[];
+}
+
+/** Turns the agent's text into groups of items. Tolerant: it streams in line by line. */
+function parseTriage(text: string): TriageGroup[] {
+  const groups: TriageGroup[] = [];
+  for (const raw of text.split("\n")) {
+    const l = raw.trim();
+    if (!l) continue;
+    const h = l.match(/^(?:#+\s*)?\*\*(.+?)\*\*:?$/) ?? l.match(/^#+\s*(.+)$/);
+    if (h) {
+      groups.push({ title: h[1].replace(/[:*]/g, "").trim(), items: [] });
+      continue;
+    }
+    if (!groups.length) groups.push({ title: "", items: [] });
+    let t = l.replace(/^[-•*]\s*/, "");
+    let n: number | null = null;
+    const ref = t.match(/^\[(\d{1,2})\]\s*/) ?? t.match(/^#(\d{1,2})\s*[:.\-–—]?\s*/);
+    if (ref) {
+      n = Number(ref[1]);
+      t = t.slice(ref[0].length);
+    }
+    let who = "";
+    const w = t.match(/^\*\*(.+?)\*\*\s*[:\-–—]?\s*/);
+    if (w) {
+      who = w[1].replace(/[:]$/, "");
+      t = t.slice(w[0].length);
+    }
+    groups[groups.length - 1].items.push({ n, who, text: t.replace(/\*\*/g, "") });
+  }
+  return groups;
+}
+
+const GROUP_STYLE: Record<string, { dot: string; hint: string }> = {
+  "needs you": { dot: "var(--focus)", hint: "Worth a reply or a decision" },
+  "for your information": { dot: "var(--ink-faint)", hint: "Good to know, nothing to do" },
+  "can go": { dot: "var(--checkbox)", hint: "Safe to archive when you like" },
+};
+
 function ContinueView() {
   const setPanel = useStore((s) => s.setPanel);
+  const select = useStore((s) => s.select);
   const run = useAgentRun();
+  const [top, setTop] = useState<Email[]>([]);
 
   useEffect(() => {
     const s = useStore.getState();
-    const top = visibleMail({ ...s, folder: "inbox", query: "", filter: "all" }).slice(0, 12);
-    const digest = top.map((m, i) => `#${i + 1} ${emailContext(m)}`).join("\n\n---\n\n");
+    const list = visibleMail({ ...s, folder: "inbox", query: "", filter: "all" }).slice(0, 12);
+    setTop(list);
+    const digest = list.map((m, i) => `#${i + 1} ${emailContext(m)}`).join("\n\n---\n\n");
     run.start(
-      `TRIAGE. You are the assistant inside the Crooli Mail app. Work through these inbox emails for me. Group them under **Needs you**, **For your information** and **Can go**. One short bullet per email, plain and calm, British spelling. Don't invent details.\n\n${digest}`,
+      `TRIAGE. You are the assistant inside the Crooli Mail app. Sort these inbox emails for me into three groups, in this order: **Needs you**, **For your information**, **Can go**. Use exactly this format, with nothing before or after it:\n\n**Needs you**\n- [2] **Sender name**: one short line on what it is and what I should do.\n\nRules: [n] is the email's number from the list. Each email appears once, under one group. Skip a group that would be empty. Plain, calm, British spelling. Don't invent details.\n\n${digest}`,
     );
     return run.stop;
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const groups = parseTriage(run.text).filter((g) => g.items.length || g.title);
+  const total = groups.reduce((n, g) => n + g.items.length, 0);
+  const open = (n: number | null) => {
+    const m = n ? top[n - 1] : null;
+    if (!m) return;
+    setPanel(null);
+    select(m.id);
+  };
+
   return (
     <div className="flex h-full flex-col">
-      <PanelHeader
-        title="Continue"
-        sub={run.status === "running" ? "Reading your latest 12 emails…" : run.status === "done" ? "Done" : ""}
-        onClose={() => setPanel(null)}
-      >
+      <PanelHeader title="Continue" sub={run.status === "running" ? "Reading your latest emails…" : ""} onClose={() => setPanel(null)}>
         {run.status === "running" && (
           <button type="button" onClick={run.stop} className={btnQuiet}>
             Stop
           </button>
         )}
       </PanelHeader>
-      <div className="scroll-quiet min-h-0 flex-1 overflow-y-auto px-[28px] py-[22px]">
-        <div className={"selectable max-w-[640px] text-[14.5px] leading-[1.65] " + (run.status === "error" ? "text-[#c4281c]" : "text-ink-2") + (run.status === "running" ? " caret" : "")}>
-          {run.text.split("\n").map((l, i) => {
-            const h = l.match(/^\*\*(.+)\*\*$/);
-            if (h)
+      <div className="scroll-quiet min-h-0 flex-1 overflow-y-auto px-[28px] pb-[28px] pt-[24px]">
+        <div className="mx-auto max-w-[680px]">
+          <h2 className="text-[22px] font-semibold leading-[1.2] tracking-[-0.02em] text-ink">
+            {run.status === "running" && !total ? "Looking through your inbox" : total ? `${total} ${total === 1 ? "email" : "emails"}, sorted` : "Your inbox"}
+          </h2>
+          <p className="mt-[4px] text-[13px] text-ink-muted">
+            {run.status === "error" ? "Your AI couldn’t finish." : `From your latest ${top.length || 12} emails. Suggestions only, nothing is sent, archived or deleted.`}
+          </p>
+
+          {run.status === "error" && <p className="selectable mt-[18px] rounded-[12px] bg-canvas px-[14px] py-[12px] text-[13.5px] leading-[1.55] text-[#c4281c]">{run.text}</p>}
+
+          {run.status === "running" && !groups.length && (
+            <div className="mt-[22px] space-y-[10px]" aria-label="Working">
+              {[88, 72, 80].map((w, i) => (
+                <div key={i} className="h-[58px] animate-pulse rounded-[12px] bg-canvas" style={{ width: `${w}%` }} />
+              ))}
+            </div>
+          )}
+
+          <div className="mt-[22px] space-y-[18px]">
+            {groups.map((g, gi) => {
+              const st = GROUP_STYLE[g.title.toLowerCase()] ?? { dot: "var(--ink-faint)", hint: "" };
               return (
-                <h3 key={i} className="mb-[4px] mt-[16px] text-[11.5px] font-semibold uppercase tracking-[0.06em] text-ink-faint first:mt-0">
-                  {h[1]}
-                </h3>
+                <section key={gi} className="pop-in">
+                  {g.title && (
+                    <div className="mb-[8px] flex items-baseline gap-[8px] px-[2px]">
+                      <span className="size-[8px] shrink-0 translate-y-[-1px] self-center rounded-full" style={{ background: st.dot }} />
+                      <h3 className="text-[13.5px] font-semibold tracking-[-0.01em] text-ink">{g.title}</h3>
+                      <span className="tabular text-[12px] text-ink-faint">{g.items.length}</span>
+                      {st.hint && <span className="ml-auto hidden text-[12px] text-ink-faint sm:inline">{st.hint}</span>}
+                    </div>
+                  )}
+                  <ul className="divide-y divide-[var(--line-soft)] overflow-hidden rounded-[12px] border border-line bg-surface shadow-[var(--card-shadow)]">
+                    {g.items.map((it, i) => {
+                      const m = it.n ? top[it.n - 1] : null;
+                      const last = run.status === "running" && gi === groups.length - 1 && i === g.items.length - 1;
+                      const body = (
+                        <>
+                          {m && (
+                            <span className="mt-[1px] shrink-0">
+                              <Avatar avatar={m.avatar} size={30} address={m.peer} />
+                            </span>
+                          )}
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-[13.5px] font-medium text-ink">{it.who || m?.fromName || "Email"}</span>
+                            <span className={"selectable block text-[13.5px] leading-[1.5] text-ink-2" + (last ? " caret" : "")}>{it.text}</span>
+                          </span>
+                        </>
+                      );
+                      return (
+                        <li key={i}>
+                          {m ? (
+                            <button type="button" onClick={() => open(it.n)} title={m.subject} className="flex w-full items-start gap-[12px] px-[14px] py-[12px] text-left transition-colors hover:bg-canvas">
+                              {body}
+                            </button>
+                          ) : (
+                            <div className="flex items-start gap-[12px] px-[14px] py-[12px]">{body}</div>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
               );
-            if (!l.trim()) return null;
-            return (
-              <p key={i} className="py-[2px]">
-                {l.replace(/\*\*/g, "")}
-              </p>
-            );
-          })}
+            })}
+          </div>
         </div>
-        {run.status === "done" && <p className="pop-in mt-[22px] text-[12.5px] text-ink-muted">Suggestions only. Nothing has been sent, archived or deleted.</p>}
       </div>
     </div>
   );
@@ -472,6 +623,24 @@ function ComposeView({ seed }: { seed: ComposeSeed }) {
   const done = useRef(false);
   const latest = useRef({ to, cc, subject, body });
   latest.current = { to, cc, subject, body };
+  const fwd = seed.forward;
+  const loadImages = useStore((s) => s.loadImages);
+
+  /** What goes out: your note, then the forwarded message exactly as it was received. */
+  const outgoing = (m: { to: string; cc: string; subject: string; body: string }) => {
+    if (!fwd) return { ...m, inReplyTo: seed.inReplyTo, references: seed.references, draftId: seed.draftId };
+    const note = m.body.trim();
+    return {
+      ...m,
+      body: `${note ? note + "\n\n" : ""}${fwd.headerText}\n\n${fwd.text}\n`,
+      html: fwd.html
+        ? `${note ? `<div>${escapeHtml(note).replace(/\n/g, "<br>")}</div><br>` : ""}<div>${fwd.headerHtml}<br>${innerHtml(fwd.html)}</div>`
+        : null,
+      inReplyTo: seed.inReplyTo,
+      references: seed.references,
+      draftId: seed.draftId,
+    };
+  };
 
   useEffect(() => {
     if (run.status !== "idle") setBody(run.text);
@@ -488,7 +657,7 @@ function ComposeView({ seed }: { seed: ComposeSeed }) {
       const m = latest.current;
       const changed = m.body.trim() !== seed.body.trim() || m.subject !== seed.subject || m.to !== seed.to;
       if (done.current || !changed || (!m.body.trim() && !m.subject.trim())) return;
-      saveDraft({ ...m, inReplyTo: seed.inReplyTo, references: seed.references, draftId: seed.draftId })
+      saveDraft(outgoing(m))
         .then(() => useStore.getState().showToast("Draft saved"))
         .catch(() => {});
     },
@@ -499,7 +668,7 @@ function ComposeView({ seed }: { seed: ComposeSeed }) {
     if (sending) return;
     setSending(true);
     try {
-      await send({ to, cc, subject, body, inReplyTo: seed.inReplyTo, references: seed.references, draftId: seed.draftId });
+      await send(outgoing({ to, cc, subject, body }));
       done.current = true;
       showToast("Sent");
       setPanel(null);
@@ -557,13 +726,26 @@ function ComposeView({ seed }: { seed: ComposeSeed }) {
           <span className="w-[56px] text-[13px] text-ink-muted">Subject</span>
           <input value={subject} onChange={(e) => setSubject(e.target.value)} className={field} />
         </label>
-        <textarea
-          autoFocus={LIVE && !!to}
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          className={"min-h-0 flex-1 resize-none py-[14px] leading-[1.6] " + field + (run.status === "running" ? " caret" : "")}
-          placeholder="Write your message, or ask AI below."
-        />
+        <div className="scroll-quiet flex min-h-0 flex-1 flex-col overflow-y-auto">
+          <textarea
+            autoFocus={LIVE && !!to}
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            className={(fwd ? "min-h-[84px] shrink-0 " : "min-h-0 flex-1 ") + "resize-none py-[14px] leading-[1.6] " + field + (run.status === "running" ? " caret" : "")}
+            placeholder={fwd ? "Add a note (optional)" : "Write your message, or ask AI below."}
+          />
+          {fwd && (
+            <div className="pb-[16px]">
+              <div className="mb-[8px] text-[11.5px] font-medium uppercase tracking-[0.05em] text-ink-faint">Forwarded message</div>
+              <div className="selectable mb-[8px] whitespace-pre-line text-[12.5px] leading-[1.55] text-ink-muted">{fwd.headerText.split("\n").slice(1).join("\n")}</div>
+              {fwd.html ? (
+                <HtmlBody html={fwd.html} images={loadImages} className="mt-0" />
+              ) : (
+                <div className="selectable whitespace-pre-wrap rounded-[10px] bg-canvas px-[14px] py-[12px] text-[13.5px] leading-[1.6] text-ink-2">{fwd.text}</div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
       <div className="flex shrink-0 items-center gap-[8px] border-t border-line-soft px-[16px] py-[12px]">
         <SparkleIcon size={14} className="shrink-0 text-claude" />
@@ -583,10 +765,10 @@ function ComposeView({ seed }: { seed: ComposeSeed }) {
         />
         <button
           type="button"
-          disabled={!body.trim() && !subject.trim()}
+          disabled={!body.trim() && !subject.trim() && !fwd}
           onClick={async () => {
             done.current = true;
-            await saveDraft({ to, cc, subject, body, inReplyTo: seed.inReplyTo, references: seed.references, draftId: seed.draftId }).catch((e) => showToast(String(e)));
+            await saveDraft(outgoing({ to, cc, subject, body })).catch((e) => showToast(String(e)));
             showToast("Saved to Drafts");
             setPanel(null);
           }}
@@ -596,7 +778,7 @@ function ComposeView({ seed }: { seed: ComposeSeed }) {
         </button>
         <button
           type="button"
-          disabled={!to.trim() || !body.trim() || sending}
+          disabled={!to.trim() || (!body.trim() && !fwd) || sending}
           onClick={doSend}
           title={LIVE ? "Send (⌘↩)" : "Sending works in the app, not this demo"}
           className="btn-continue h-[30px] rounded-full px-[14px] text-[13px] font-medium disabled:opacity-35"
