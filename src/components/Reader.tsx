@@ -578,7 +578,7 @@ function ComposeView({ seed }: { seed: ComposeSeed }) {
               );
             }
           }}
-          placeholder={body.trim() ? "Ask AI to change it, e.g. “shorter and friendlier”" : "Ask AI to write it, e.g. “thank Maya, suggest Thursday”"}
+          placeholder={body.trim() ? "Ask AI to change it, e.g. “shorter and friendlier”" : "Ask AI to write it, e.g. “thank Wren, suggest Thursday”"}
           className={field + " text-[13.5px]"}
         />
         <button

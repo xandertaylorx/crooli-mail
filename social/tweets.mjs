@@ -10,7 +10,7 @@ const INSTALL = `curl -fsSL ${SITE}/install.sh | bash`;
 export const ALT = {
   "01-hero": "The Crooli Mail app on a blue gradient: an inbox on the left and an open email on the right, with the headline 'An email client with your AI in it.'",
   "02-continue": "The Continue panel in Crooli Mail, listing emails sorted under Needs you, For your information and Can go.",
-  "03-draft": "An email from Rico open in Crooli Mail with an AI-written reply already in the reply box.",
+  "03-draft": "An email from Noor open in Crooli Mail with an AI-written reply already in the reply box.",
   "04-connect": "The Connect your mail screen in Crooli Mail, showing numbered steps for making a Gmail app password.",
   "05-dark": "Crooli Mail in dark mode, using Codex as the AI.",
   "06-ai-settings": "The Settings panel in Crooli Mail showing Claude Code selected, the Haiku model, and 5-hour and weekly usage bars.",

@@ -27,14 +27,6 @@ export function Avatar({ avatar, size = 32, address }: { avatar: AvatarT; size?:
   switch (avatar.kind) {
     case "image":
       return <img src={avatar.src} alt="" style={common} className="shrink-0 rounded-full object-cover" draggable={false} />;
-    case "substack":
-      return (
-        <span style={{ ...common, background: "#ff6719" }} className="flex shrink-0 items-center justify-center rounded-full">
-          <svg width={size * 0.42} height={size * 0.46} viewBox="0 0 18 20" aria-hidden>
-            <path d="M1 1h16v2.4H1zM1 5.6h16V8H1zM1 10.2h16V19l-8-4.4L1 19z" fill="#fff" />
-          </svg>
-        </span>
-      );
     case "brand":
       return (
         <span

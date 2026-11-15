@@ -113,7 +113,7 @@ The screenshots are the source of truth. Anything new should look like it belong
 1. Thread summary (one-liner in the list and a full version in the reader)
 2. Draft reply in the user's voice (learned from Sent items)
 3. **Continue**: the agent works the inbox (triage, draft replies, flag what needs you) and proposes actions in a review queue
-4. Ask your inbox ("what did Deel say about my withdrawal?")
+4. Ask your inbox ("what did Larkspur say about my withdrawal?")
 5. Smart categories / auto-labels
 6. Unsubscribe and cleanup suggestions
 

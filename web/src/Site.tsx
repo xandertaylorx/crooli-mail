@@ -524,9 +524,9 @@ export function Site() {
           <Typing
             lines={[
               "Needs you",
-              "• Rico wants 20 minutes for UX feedback. Suggest Thursday 10.00.",
+              "• Noor wants 20 minutes for UX feedback. Suggest Thursday 10.00.",
               "For your information",
-              "• Deel: £2,450.00 is on its way, 1–3 working days.",
+              "• Larkspur Pay: £2,450.00 is on its way, 1–3 working days.",
             ]}
           />
         </Showcase>

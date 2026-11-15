@@ -1,11 +1,8 @@
-// Mock mailbox used until real IMAP sync lands (PLAN.md, Phase 2).
-// The first three messages match design/reference/*.png exactly.
-import ricoAvatar from "../assets/avatar-rico.png";
+// Sample mailbox for the website demo. Every person, company and address here is made up.
 
 export type Avatar =
   | { kind: "image"; src: string }
   | { kind: "brand"; bg: string; fg: string; label: string; size?: number; weight?: number }
-  | { kind: "substack" }
   | { kind: "initials"; bg: string; fg: string; text: string };
 
 export type FolderId = "inbox" | "sent" | "drafts" | "archive" | "starred" | "trash";
@@ -39,7 +36,7 @@ export interface Email {
 
 export const INBOX_TOTAL = 14171;
 
-// "Today" for the mock: Rico's message arrives at 05.16.
+// "Today" for the mock: Noor's message arrives at 05.16.
 const now = new Date();
 const today0516 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 5, 16);
 const june29 = (h: number, m: number) => {
@@ -50,10 +47,10 @@ const june29 = (h: number, m: number) => {
 const fixed: Omit<Email, "id">[] = [
   {
     folder: "inbox",
-    fromName: "Rico Oktananda",
-    fromAddress: "rico@oktananda.studio",
+    fromName: "Noor Calloway",
+    fromAddress: "noor@hollinreeve.example",
     verified: true,
-    avatar: { kind: "image", src: ricoAvatar },
+    avatar: { kind: "initials", bg: "#ffe1cc", fg: "#8a3b0c", text: "NC" },
     subject: "Your insights on our UX design",
     preview:
       "We’re refining our product and need your insights on our user experience (UX) design. Could you spare 20 minutes this week for a quick call?",
@@ -64,46 +61,46 @@ We’re refining our product and need your insights on our user experience (UX) 
 Could you spare 20 minutes this week for a quick call? I’m free Tuesday after 14.00 or any time Thursday morning. If a call doesn’t suit, a few written notes on the onboarding flow and the new inbox layout would be just as helpful.
 
 Thanks so much,
-Rico`,
+Noor`,
     date: today0516,
     unread: true,
     starred: false,
   },
   {
     folder: "inbox",
-    fromName: "Alicia from Deel",
-    fromAddress: "alicia@deel.com",
+    fromName: "Hana from Larkspur Pay",
+    fromAddress: "hana@larkspurpay.example",
     verified: true,
-    avatar: { kind: "brand", bg: "#c5b3fd", fg: "#14102b", label: "deel.", size: 12.5, weight: 700 },
+    avatar: { kind: "brand", bg: "#c5b3fd", fg: "#14102b", label: "larkspur", size: 10, weight: 700 },
     subject: "Your money is on the way",
     preview:
-      "Your money is on the way! Your Deel withdrawal is all set, and your money is on its way to your bank account. It should arrive within 1–3 working days.",
+      "Your money is on the way! Your Larkspur withdrawal is all set, and your money is on its way to your bank account. It should arrive within 1–3 working days.",
     body: `Your money is on the way!
 
-Your Deel withdrawal is all set, and your money is on its way to your bank account.
+Your Larkspur withdrawal is all set, and your money is on its way to your bank account.
 
 Amount: £2,450.00
 Destination: Bank account ending 4417
 Expected arrival: within 1–3 working days
 
-You can follow the transfer at any time from the Withdrawals page in your Deel dashboard.
+You can follow the transfer at any time from the Withdrawals page in your Larkspur dashboard.
 
-Alicia
-Deel Payments`,
+Hana
+Larkspur Payments`,
     date: june29(16, 2),
     unread: false,
     starred: false,
   },
   {
     folder: "inbox",
-    fromName: "Substack Read",
-    fromAddress: "no-reply@substack.com",
+    fromName: "Tidewell Weekly",
+    fromAddress: "no-reply@tidewell.example",
     verified: true,
-    avatar: { kind: "substack" },
+    avatar: { kind: "brand", bg: "#1f6f78", fg: "#fff", label: "T", size: 17, weight: 700 },
     subject: "Your weekly reads",
     preview:
       "Five new posts from writers you follow, plus a long read on how small teams ship calm software.",
-    body: `This week on Substack
+    body: `This week on Tidewell
 
 Five new posts from writers you follow, plus a long read on how small teams ship calm software.
 
@@ -129,20 +126,20 @@ const rand = () => {
 const pick = <T,>(a: T[]) => a[Math.floor(rand() * a.length)];
 
 const senders: { name: string; address: string; verified: boolean; avatar: Avatar }[] = [
-  { name: "Linear", address: "updates@linear.app", verified: true, avatar: { kind: "brand", bg: "#5e6ad2", fg: "#fff", label: "L", size: 17, weight: 700 } },
-  { name: "Figma", address: "no-reply@figma.com", verified: true, avatar: { kind: "brand", bg: "#1e1e1e", fg: "#fff", label: "F", size: 17, weight: 700 } },
-  { name: "Maya Lindqvist", address: "maya@northwind.co", verified: false, avatar: { kind: "initials", bg: "#ffe1cc", fg: "#8a3b0c", text: "ML" } },
-  { name: "Stripe", address: "receipts@stripe.com", verified: true, avatar: { kind: "brand", bg: "#635bff", fg: "#fff", label: "S", size: 17, weight: 700 } },
-  { name: "GitHub", address: "noreply@github.com", verified: true, avatar: { kind: "brand", bg: "#0d1117", fg: "#fff", label: "GH", size: 13, weight: 700 } },
-  { name: "Tom Okafor", address: "tom@okafor.dev", verified: false, avatar: { kind: "initials", bg: "#d6ecff", fg: "#0b4a80", text: "TO" } },
-  { name: "Notion", address: "team@makenotion.com", verified: true, avatar: { kind: "brand", bg: "#ffffff", fg: "#111", label: "N", size: 17, weight: 700 } },
-  { name: "Priya Shah", address: "priya@studio-shah.com", verified: false, avatar: { kind: "initials", bg: "#e4f5e6", fg: "#1f6b33", text: "PS" } },
-  { name: "Vercel", address: "notifications@vercel.com", verified: true, avatar: { kind: "brand", bg: "#000", fg: "#fff", label: "▲", size: 14, weight: 700 } },
-  { name: "Ben Carter", address: "ben@carter.email", verified: false, avatar: { kind: "initials", bg: "#f0e6ff", fg: "#5a2ea6", text: "BC" } },
-  { name: "Monzo", address: "help@monzo.com", verified: true, avatar: { kind: "brand", bg: "#ff4f40", fg: "#fff", label: "M", size: 17, weight: 700 } },
-  { name: "Airbnb", address: "automated@airbnb.com", verified: true, avatar: { kind: "brand", bg: "#ff385c", fg: "#fff", label: "A", size: 17, weight: 700 } },
-  { name: "Sofia Romero", address: "sofia@romero.design", verified: false, avatar: { kind: "initials", bg: "#fff3c4", fg: "#7a5a00", text: "SR" } },
-  { name: "Product Hunt", address: "hello@producthunt.com", verified: true, avatar: { kind: "brand", bg: "#da552f", fg: "#fff", label: "P", size: 17, weight: 700 } },
+  { name: "Mapleline", address: "updates@mapleline.example", verified: true, avatar: { kind: "brand", bg: "#5e6ad2", fg: "#fff", label: "M", size: 17, weight: 700 } },
+  { name: "Draftboard", address: "no-reply@draftboard.example", verified: true, avatar: { kind: "brand", bg: "#1e1e1e", fg: "#fff", label: "D", size: 17, weight: 700 } },
+  { name: "Wren Hallett", address: "wren@fieldnote.example", verified: false, avatar: { kind: "initials", bg: "#ffe1cc", fg: "#8a3b0c", text: "WH" } },
+  { name: "Ledgerly", address: "receipts@ledgerly.example", verified: true, avatar: { kind: "brand", bg: "#635bff", fg: "#fff", label: "L", size: 17, weight: 700 } },
+  { name: "Codeshelf", address: "noreply@codeshelf.example", verified: true, avatar: { kind: "brand", bg: "#0d1117", fg: "#fff", label: "CS", size: 13, weight: 700 } },
+  { name: "Jonas Verbeek", address: "jonas@verbeek.example", verified: false, avatar: { kind: "initials", bg: "#d6ecff", fg: "#0b4a80", text: "JV" } },
+  { name: "Quillpad", address: "team@quillpad.example", verified: true, avatar: { kind: "brand", bg: "#ffffff", fg: "#111", label: "Q", size: 17, weight: 700 } },
+  { name: "Amara Quist", address: "amara@quistworks.example", verified: false, avatar: { kind: "initials", bg: "#e4f5e6", fg: "#1f6b33", text: "AQ" } },
+  { name: "Shipyard", address: "notifications@shipyard.example", verified: true, avatar: { kind: "brand", bg: "#000", fg: "#fff", label: "S", size: 17, weight: 700 } },
+  { name: "Felix Ashdown", address: "felix@ashdown.example", verified: false, avatar: { kind: "initials", bg: "#f0e6ff", fg: "#5a2ea6", text: "FA" } },
+  { name: "Brookbank", address: "help@brookbank.example", verified: true, avatar: { kind: "brand", bg: "#ff4f40", fg: "#fff", label: "B", size: 17, weight: 700 } },
+  { name: "Stayhaven", address: "automated@stayhaven.example", verified: true, avatar: { kind: "brand", bg: "#ff385c", fg: "#fff", label: "S", size: 17, weight: 700 } },
+  { name: "Lucia Fenwick", address: "lucia@fenwick.example", verified: false, avatar: { kind: "initials", bg: "#fff3c4", fg: "#7a5a00", text: "LF" } },
+  { name: "Launchpad Daily", address: "hello@launchpaddaily.example", verified: true, avatar: { kind: "brand", bg: "#da552f", fg: "#fff", label: "L", size: 17, weight: 700 } },
 ];
 
 const topics: [string, string][] = [

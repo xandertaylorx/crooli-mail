@@ -18,7 +18,7 @@ A fast, modern email client for macOS (Windows coming later), powered by the AI 
 - Summarizes long threads in one line
 - Drafts replies in your voice
 - **Continue** works through your inbox for you (triage, drafts, flags) and you approve its actions
-- Answers questions about your email: "When does my Deel payout land?"
+- Answers questions about your email: "When does my Larkspur payout land?"
 
 ## Status
 
